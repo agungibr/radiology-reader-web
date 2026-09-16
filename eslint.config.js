@@ -19,6 +19,14 @@ export default ts.config(
     }
   },
   {
-    ignores: ['.svelte-kit/', 'build/', '.svelte-kit/cloudflare/', 'node_modules/']
+    ignores: [
+      '.svelte-kit/',
+      'build/',
+      '.svelte-kit/cloudflare/',
+      '.wrangler/',
+      'test-results/',
+      'playwright-report/',
+      'node_modules/'
+    ]
   }
 );
