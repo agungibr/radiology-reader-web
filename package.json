@@ -1,0 +1,39 @@
+{
+  "name": "radiology-reader-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "lint": "eslint . && prettier --check .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "deploy": "wrangler pages deploy .svelte-kit/cloudflare"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@sveltejs/adapter-cloudflare": "^6.0.0",
+    "@sveltejs/kit": "^2.9.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.0.0",
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "dicom-parser": "^1.8.21",
+    "drizzle-orm": "^0.38.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.0"
+  }
+}
