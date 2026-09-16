@@ -24,6 +24,7 @@ Keputusan user (2026-09-16): export **xlsx + csv**, DAP hidden, ikuti desktop un
 - [ ] Task 3: Port DRL engine + data + unit tests
 
 ### Checkpoint: Foundation
+
 - [ ] `npm run check` hijau, `npm run test` hijau (dose, calibration, DRL incl. kasus thoracolumbar-vs-lumbar)
 - [ ] Review dengan human sebelum lanjut ke DB/API
 
@@ -33,6 +34,7 @@ Keputusan user (2026-09-16): export **xlsx + csv**, DAP hidden, ikuti desktop un
 - [ ] Task 5: API history + export (xlsx+csv) + DRL assess + kalibrasi
 
 ### Checkpoint: Data + API
+
 - [ ] CRUD history via `curl`/vitest endpoint, export xlsx+csv terdownload dan terbuka di Excel, DRL endpoint cocok dengan unit
 - [ ] Review dengan human
 
@@ -43,6 +45,7 @@ Keputusan user (2026-09-16): export **xlsx + csv**, DAP hidden, ikuti desktop un
 - [ ] Task 8: Form DAP + kartu DRL + History page + kartu estimasi mSv desktop-parity
 
 ### Checkpoint: UI slices
+
 - [ ] Alur manual end-to-end jalan: upload fixture → auto-fill → hitung → badge DRL → history → export
 - [ ] Review dengan human
 
@@ -52,6 +55,7 @@ Keputusan user (2026-09-16): export **xlsx + csv**, DAP hidden, ikuti desktop un
 - [ ] Task 10: Build/preview/deploy pages.dev + rapikan docs
 
 ### Checkpoint: Complete
+
 - [ ] Semua success criteria spec.md terpenuhi, siap review akhir
 
 ## Dependency Graph
@@ -73,13 +77,13 @@ Paralel aman setelah T5: T6, T7, T8 bisa dikerjakan paralel oleh agen berbeda (k
 
 ## Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Parse DICOM di browser beda hasil vs pydicom (windowing, MONOCHROME1, multi-frame) | High | Golden fixture: bandingkan metadata + screenshot vs desktop untuk 3 file (Chest PA, Skull Lateral, Panoramic); batasi v1 ke single-frame |
-| File DICOM > limit memori browser / Worker | Med | Validasi ukuran client (tolak >50MB dengan pesan Indonesia), gambar tak dikirim ke server |
-| Regresi power presisi float beda Python vs JS | Med | Toleransi 1e-4 di test, tampil 6 desimal seperti desktop |
-| D1 local vs remote drift / seed DRL salah angka | Med | Seed SQL di-generate dari JSON + test hitung jumlah rows (21 exam, ~40 view/age combos); `wrangler d1 execute --local` dulu |
-| Bundle client membengkak (dicom-parser + xlsx) | Low | xlsx hanya di server endpoint, bukan client; dynamic import viewer |
+| Risk                                                                               | Impact | Mitigation                                                                                                                               |
+| ---------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Parse DICOM di browser beda hasil vs pydicom (windowing, MONOCHROME1, multi-frame) | High   | Golden fixture: bandingkan metadata + screenshot vs desktop untuk 3 file (Chest PA, Skull Lateral, Panoramic); batasi v1 ke single-frame |
+| File DICOM > limit memori browser / Worker                                         | Med    | Validasi ukuran client (tolak >50MB dengan pesan Indonesia), gambar tak dikirim ke server                                                |
+| Regresi power presisi float beda Python vs JS                                      | Med    | Toleransi 1e-4 di test, tampil 6 desimal seperti desktop                                                                                 |
+| D1 local vs remote drift / seed DRL salah angka                                    | Med    | Seed SQL di-generate dari JSON + test hitung jumlah rows (21 exam, ~40 view/age combos); `wrangler d1 execute --local` dulu              |
+| Bundle client membengkak (dicom-parser + xlsx)                                     | Low    | xlsx hanya di server endpoint, bukan client; dynamic import viewer                                                                       |
 
 ## Open Questions
 
