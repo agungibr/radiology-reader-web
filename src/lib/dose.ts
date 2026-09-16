@@ -153,3 +153,91 @@ export function calculateDap(input: DapInput): DapResult {
 
   return { kvp, mas, sidCm, fieldAreaCm2, c1, c2, c3, yKvp, iakSddMgy, iakSidMgy, dapMgyCm2 };
 }
+
+// ---------------------------------------------------------------------------
+// Estimasi dosis efektif sederhana (parity desktop DoseCalculator)
+// ---------------------------------------------------------------------------
+
+/** Faktor dosis dasar per jenis pemeriksaan (mSv). */
+export const DOSE_FACTORS: Record<string, number> = {
+  CT_HEAD: 2.0,
+  CT_CHEST: 7.0,
+  CT_ABDOMEN: 10.0,
+  CT_PELVIS: 8.0,
+  XRAY_CHEST: 0.1,
+  XRAY_SPINE: 1.5,
+  XRAY_ABDOMEN: 0.7,
+  MAMMOGRAPHY: 0.4,
+  DEFAULT: 5.0
+};
+
+export interface DoseEstimateInput {
+  age: number;
+  gender: string;
+  weightKg: number;
+  examType?: string;
+}
+
+export interface DoseEstimate {
+  estimatedDoseMSv: number;
+  baseDose: number;
+  ageFactor: number;
+  weightFactor: number;
+  genderFactor: number;
+  examType: string;
+}
+
+function ageFactorFor(age: number): number {
+  if (age < 10) return 0.3;
+  if (age < 18) return 0.6;
+  return 1.0;
+}
+
+function weightFactorFor(weightKg: number): number {
+  if (weightKg < 20) return 0.3;
+  if (weightKg < 40) return 0.5;
+  if (weightKg < 60) return 0.8;
+  if (weightKg < 80) return 1.0;
+  if (weightKg < 100) return 1.2;
+  return 1.5;
+}
+
+/**
+ * Estimasi dosis efektif (mSv). Model sederhana untuk gambaran —
+ * bukan pengganti kalibrasi klinis (sama seperti desktop).
+ */
+export function estimateEffectiveDose(input: DoseEstimateInput): DoseEstimate {
+  const { age, gender, weightKg, examType = 'DEFAULT' } = input;
+  const baseDose = DOSE_FACTORS[examType] ?? DOSE_FACTORS['DEFAULT']!;
+  const ageFactor = ageFactorFor(age);
+  const weightFactor = weightFactorFor(weightKg);
+  const genderFactor = gender.toUpperCase() === 'F' ? 0.95 : 1.0;
+  const estimated = baseDose * ageFactor * weightFactor * genderFactor;
+
+  return {
+    estimatedDoseMSv: Math.round(estimated * 100) / 100,
+    baseDose,
+    ageFactor,
+    weightFactor,
+    genderFactor,
+    examType
+  };
+}
+
+export interface DoseComparison {
+  doseMSv: number;
+  equivalentDaysOfBackground: number;
+  equivalentChestXrays: number;
+  airTravelHours: number;
+}
+
+/** Bandingkan dosis dengan radiasi alam (~2.4 mSv/tahun). */
+export function getDoseComparison(doseMSv: number): DoseComparison {
+  const annualBackground = 2.4;
+  return {
+    doseMSv,
+    equivalentDaysOfBackground: Math.round((doseMSv / annualBackground) * 365 * 10) / 10,
+    equivalentChestXrays: Math.round((doseMSv / 0.1) * 10) / 10,
+    airTravelHours: Math.round((doseMSv / 0.005) * 60)
+  };
+}
