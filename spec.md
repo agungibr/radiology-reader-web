@@ -42,21 +42,25 @@ Rebuild the desktop Radiology Reader as a zero-install web app with the same dos
 ## 2. Features (descriptive)
 
 ### F1. Open and view X-ray images
+
 Upload one file via picker or drag-drop. Supported: `.dcm`, `.dicom` (with or without extension, detected by `DICM` magic), `.jpg`, `.jpeg`, `.png`, `.bmp`, `.tiff`. Show list of uploaded files in current session (in-memory, not persisted). Select file to view.
 
 Viewer must support: fit-to-window on load, wheel zoom (0.15x–8x), +/- buttons, Reset (1x), Fit button, drag-to-pan, black background, size label (`W x H`), zoom label (`%`).
 
 ### F2. Patient data appears automatically
+
 On DICOM load, extract and display: Patient ID, Name, Birth Date, Sex, Age (computed Birth→Study, fallback PatientAge tag), Study Date, Study Description, Series Description, Modality, Institution, Body Part Examined, View Position, Patient Weight.
 
 For JPG/PNG: show "No DICOM metadata" empty state, allow manual typing of age / gender / exam for DRL.
 
 ### F3. Exposure settings auto-fill + manual edit
+
 Auto-fill from DICOM tags: KVP `(0018,0060)`, mA `(0018,1151)`, ExposureTime ms→s `(0018,1150)`, mAs fallback `(0018,1152)`, DAP `(0018,115E)` converted `dGy·cm² × 100 → mGy·cm²`, Weight `(0010,1030)`.
 
 Each field shows a small "DICOM" badge when auto-filled, "—" when missing. All fields editable. Live `mAs = mA × s` display with 4 decimals.
 
 ### F4. Calculate INAK / ESAK dose
+
 Formula (must match desktop exactly):
 
 ```
@@ -68,11 +72,13 @@ ESAK = INAK × BSF
 Defaults: `a=0.0004, b=2.5917, BSF=1.35`. Show results with 6 decimals + formula trace (`y=... INAK=... ESAK=...`). Validation: kVp>0, mAs>0 else warning toast.
 
 ### F5. Machine calibration (manual only, no OCR)
+
 Table with columns: `kVp | mAs | mGy | µGy | µGy/mAs`. Start with 6 empty rows, mAs default `20.0000` editable.
 
 Buttons: `+ Baris`, `- Baris`, `Hitung` (µGy = mGy×1000, µGy/mAs = µGy/mAs), `Tampilkan Rumus Y` (power regression `y = a×kVp^b` from kVp vs µGy/mAs columns via log-linear OLS, min 2 rows). Result shows `y = a × kVp^b` + `R²`. On success, update coeff `a,b` inputs automatically. `Reset Default` restores `a,b`. `Fit Regresi` legacy button (kVp vs mGy) kept for parity.
 
 ### F6. Calculate DAP
+
 Formula (must match desktop):
 
 ```
@@ -85,6 +91,7 @@ DAP     = IAK_SID × field_area
 Defaults: `c1=0.0067, c2=-0.0359, c3=-5.4286, SID=100cm, area=625cm²`. Show y, IAK_SDD, IAK_SID (6 decimals), DAP (4 decimals) + formula trace.
 
 ### F7. Automatic safety check (DRL)
+
 After each INAK/ESAK or DAP calculation, run DRL assessment using ported `drl_config.json`:
 
 - Match exam: case-insensitive substring on StudyDescription then BodyPartExamined, longest keyword first (so `thoracolumbar` beats `lumbar`). 20+ exams: Panoramic, Chest, Abdomen, Ankle Joint, Antebrachi, Cervical, Clavicula, Cruris, Elbow, Femur, Humerus, Knee, Lumbar Spine, Manus, Pedis, Pelvis, Shoulder, Sinus Paranasal, Skull, Thoracolumbar, Wrist Joint.
@@ -96,11 +103,13 @@ After each INAK/ESAK or DAP calculation, run DRL assessment using ported `drl_co
 UI: card showing `Exam | metric`, `Exam | View | Age group`, rows INAK `/ DRL x.xx mGy` + badge, ESAK same, DAP row when metric=dap. Colors: green `#22c55e` Below, amber `#f59e0b` Equal, red `#ef4444` Above. When no match: show "Tidak ada referensi DRL yang cocok" + reason.
 
 ### F8. History + Excel export
+
 Every successful INAK/ESAK calculation appends one row (persisted to D1): No, Patient ID, Nama, Gender, Umur, BB, Jenis Pemeriksaan (`Exam View`), kVp, mA, s, mAs, INAK, ESAK, DAP (from DICOM tag, may be empty), DRL Batas (`INAK≤x, ESAK≤y` or `DAP≤z`), Hasil DRL (worst of INAK/ESAK, or DAP status).
 
 History page: paginated table (20/page), delete row (confirm), clear all (confirm), counter, empty state. Export button generates `.xlsx` (sheet `History INAK ESAK`, auto-width, max 40) or `.csv`. Filename `history_inak_esak_YYYYMMDD_HHMMSS.xlsx`.
 
 ### F9. DICOM tags inspector
+
 Read-only table of all DICOM tags (`Description | Value`, values truncated 300 chars) for the loaded file. Scan-text tab from desktop is removed.
 
 ---
@@ -212,14 +221,14 @@ Example:
 <script lang="ts">
   import { calculateAll } from '$lib/dose';
   let { kvp = $bindable(0), ma = $bindable(0), timeS = $bindable(0) } = $props();
-  let result = $derived(kvp > 0 && ma > 0 && timeS > 0
-    ? calculateAll({ kvp, ma, timeS, bsf: 1.35, coeffA: 0.0004, coeffB: 2.5917 })
-    : null);
+  let result = $derived(
+    kvp > 0 && ma > 0 && timeS > 0
+      ? calculateAll({ kvp, ma, timeS, bsf: 1.35, coeffA: 0.0004, coeffB: 2.5917 })
+      : null
+  );
 </script>
 
-<button onclick={() => result && onSave(result)} disabled={!result}>
-  Hitung INAK dan ESAK
-</button>
+<button onclick={() => result && onSave(result)} disabled={!result}> Hitung INAK dan ESAK </button>
 ```
 
 ## 7. Testing Strategy
