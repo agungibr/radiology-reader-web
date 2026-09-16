@@ -6,7 +6,7 @@ nilai otomatis terhadap batas DRL nasional, simpan history, export Excel/CSV.
 Port dari aplikasi desktop `text-recognition` (PySide6) — **tanpa fitur OCR**.
 Sumber kebenaran: `spec.md`. Rencana: `tasks/plan.md`, `tasks/todo.md`.
 
-Live: https://radiology-reader-web.pages.dev
+Live: https://radiology-reader-web-bkw.pages.dev (akun `agungmalik050@gmail.com`)
 
 ## Quick Start
 
@@ -50,8 +50,12 @@ Skema drizzle: `src/lib/db/schema.ts`. (Drizzle-kit sengaja tidak dipakai.)
 
 ```bash
 npm run build
-npm run deploy   # → https://radiology-reader-web.pages.dev
+npx wrangler pages deploy .svelte-kit/cloudflare --project-name=radiology-reader-web --branch=main
+# → https://radiology-reader-web-bkw.pages.dev
 ```
+
+Deploy Git Pages tidak dipakai: kolom Deploy/Version di dashboard harus netral (`true`) —
+perintah Workers (`wrangler deploy`) ditolak di proyek Pages.
 
 Binding D1 `DB` terbaca dari `wrangler.toml` (`pages_build_output_dir` wajib ada
 agar Pages memakai config tersebut).
