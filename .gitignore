@@ -1,0 +1,30 @@
+# deps
+node_modules/
+
+# SvelteKit
+.svelte-kit/
+build/
+dist/
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# env / secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# tests
+playwright-report/
+test-results/
+
+# local sqlite / d1 state
+*.db
+*.db-journal
+*.sqlite*
