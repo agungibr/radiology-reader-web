@@ -1,0 +1,207 @@
+{
+  "_comment": "DRL Configuration — Diagnostic Reference Level",
+  "_source": "Peraturan BAPETEN / Acuan DRL Nasional Radiografi Diagnostik",
+  "_units": {
+    "inak": "mGy",
+    "esak": "mGy",
+    "dap": "mGy·cm²"
+  },
+  "_age_groups": {
+    "infant": "0–4 tahun (Bayi)",
+    "children": "5–14 tahun (Anak-anak)",
+    "adult": "≥15 tahun (Dewasa)"
+  },
+
+  "examination_keywords": {
+    "Panoramic": ["panoramic", "panoramik", "panorama", "dental panoramic"],
+    "Chest": ["chest", "thorax", "thoraks", "paru", "lung", "pulmo"],
+    "Abdomen": ["abdomen", "abdominal", "perut"],
+    "Ankle Joint": ["ankle", "pergelangan kaki", "ankle joint"],
+    "Antebrachi": ["antebrachi", "antebrachii", "forearm", "lengan bawah"],
+    "Cervical": ["cervical", "cervikal", "cervix", "cervicalis", "leher"],
+    "Clavicula": ["clavicula", "clavicle", "klavikula", "clavicular"],
+    "Cruris": ["cruris", "tibia fibula", "lower leg"],
+    "Elbow": ["elbow", "siku", "cubiti", "cubitus"],
+    "Femur": ["femur", "paha", "thigh"],
+    "Humerus": ["humerus", "lengan atas", "upper arm"],
+    "Knee": ["knee", "lutut", "genu", "patella"],
+    "Lumbar Spine": ["lumbar", "lumbal", "lumbosacral", "lumbo", "l-spine"],
+    "Manus": ["manus", "hand", "tangan", "finger", "jari"],
+    "Pedis": ["pedis", "foot", "kaki", "pes"],
+    "Pelvis": ["pelvis", "panggul", "hip", "coxae"],
+    "Shoulder": ["shoulder", "bahu", "glenohumeral", "scapula"],
+    "Sinus Paranasal": ["sinus", "paranasal", "waters", "caldwell", "sinuses"],
+    "Skull": ["skull", "cranium", "kepala", "head", "calvaria"],
+    "Thoracolumbar": ["thoracolumbar", "thorakolumbar", "thoraco-lumbar", "t-l spine"],
+    "Wrist Joint": ["wrist", "pergelangan tangan", "wrist joint", "carpal"]
+  },
+
+  "view_aliases": {
+    "ap": "AP",
+    "pa": "PA",
+    "lat": "Lateral",
+    "lateral": "Lateral",
+    "ll": "Lateral",
+    "rl": "Lateral",
+    "oblique": "Oblique",
+    "obl": "Oblique",
+    "standard": "Standard",
+    "waters": "Waters"
+  },
+
+  "drl_table": {
+    "Panoramic": {
+      "Standard": {
+        "children": { "metric": "dap", "dap": 62.3 },
+        "adult": { "metric": "dap", "dap": 120.0 }
+      }
+    },
+    "Chest": {
+      "AP": {
+        "infant": { "metric": "dap", "dap": 3.4 },
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      },
+      "PA": {
+        "children": { "metric": "dap", "dap": 9.2 },
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.2 }
+      }
+    },
+    "Abdomen": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.9, "esak": 1.3 }
+      }
+    },
+    "Ankle Joint": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.2 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.2 }
+      }
+    },
+    "Antebrachi": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.2 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      }
+    },
+    "Cervical": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.4, "esak": 0.6 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.6, "esak": 0.8 }
+      }
+    },
+    "Clavicula": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      }
+    },
+    "Cruris": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.3, "esak": 0.3 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      }
+    },
+    "Elbow": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      }
+    },
+    "Femur": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.4, "esak": 0.5 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.3, "esak": 0.4 }
+      }
+    },
+    "Humerus": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      }
+    },
+    "Knee": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      }
+    },
+    "Lumbar Spine": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 1.3, "esak": 1.8 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 1.5, "esak": 2.0 }
+      }
+    },
+    "Manus": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      },
+      "Oblique": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      }
+    },
+    "Pedis": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.2 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.2, "esak": 0.3 }
+      },
+      "Oblique": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      }
+    },
+    "Pelvis": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.8, "esak": 1.1 }
+      }
+    },
+    "Shoulder": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.4, "esak": 0.5 }
+      }
+    },
+    "Sinus Paranasal": {
+      "Waters": {
+        "adult": { "metric": "inak_esak", "inak": 0.6, "esak": 0.8 }
+      }
+    },
+    "Skull": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.8, "esak": 1.0 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.5, "esak": 0.7 }
+      }
+    },
+    "Thoracolumbar": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.7, "esak": 1.0 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 1.4, "esak": 1.9 }
+      }
+    },
+    "Wrist Joint": {
+      "AP": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      },
+      "Lateral": {
+        "adult": { "metric": "inak_esak", "inak": 0.1, "esak": 0.1 }
+      }
+    }
+  }
+}
