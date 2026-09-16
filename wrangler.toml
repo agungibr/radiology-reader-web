@@ -1,0 +1,13 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "radiology-reader-web"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "radiology-db"
+# TODO(Task 4): replace with real id from `wrangler d1 create radiology-db`
+database_id = "00000000-0000-0000-0000-000000000000"
