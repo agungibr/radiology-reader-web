@@ -1,6 +1,9 @@
 # Todo: Radiology Reader Web
 
-> Sumber kebenaran: `spec.md`. Urutan mengikuti `plan.md`. Centang hanya jika acceptance + verification lolos.
+> SELESAI 2026-09-16 — semua acceptance + verification lolos.
+> Deviasi kecil vs rencana awal (dicatat di `tasks/plan.md`): `format.ts` tidak dibuat,
+> `validation.ts` mendarat di Task 5, toggle DAP mendarat di Task 8, API publik bernama
+> `calculateInakEsak` (bukan `calculateAll`).
 
 ## Task 1: Scaffold SvelteKit + Cloudflare + Tailwind + tooling
 
@@ -8,14 +11,14 @@
 
 **Acceptance criteria:**
 
-- [ ] `npm run dev` jalan, 3 route placeholder render tanpa error console
-- [ ] `npm run check` dan `npm run build` hijau
-- [ ] `wrangler.toml` berisi `compatibility_date`, `nodejs_compat`, binding `[[d1_databases]]`
+- [x] `npm run dev` jalan, 3 route placeholder render tanpa error console
+- [x] `npm run check` dan `npm run build` hijau
+- [x] `wrangler.toml` berisi `compatibility_date`, `nodejs_compat`, binding `[[d1_databases]]`
 
 **Verification:**
 
-- [ ] `npm run check`, `npm run build`
-- [ ] Manual: buka `/`, `/dosimetry`, `/history` di dev
+- [x] `npm run check`, `npm run build`
+- [x] Manual: buka `/`, `/dosimetry`, `/history` di dev
 
 **Dependencies:** None
 
@@ -34,13 +37,13 @@
 
 **Acceptance criteria:**
 
-- [ ] `calculateAll({kvp,ma,timeS,bsf,coeffA,coeffB})` cocok desktop s.d. 4 desimal pada 3 fixture
-- [ ] `calculateDap(...)` cocok desktop s.d. 4 desimal
-- [ ] `fitPowerRegression` kembalikan `a,b,r2` benar pada fixture log-linear
+- [x] `calculateAll({kvp,ma,timeS,bsf,coeffA,coeffB})` cocok desktop s.d. 4 desimal pada 3 fixture
+- [x] `calculateDap(...)` cocok desktop s.d. 4 desimal
+- [x] `fitPowerRegression` kembalikan `a,b,r2` benar pada fixture log-linear
 
 **Verification:**
 
-- [ ] `npm run test -- tests/dose.test.ts tests/calibration.test.ts`
+- [x] `npm run test -- tests/dose.test.ts tests/calibration.test.ts`
 
 **Dependencies:** Task 1
 
@@ -59,13 +62,13 @@
 
 **Acceptance criteria:**
 
-- [ ] `thoracolumbar` tidak salah match `lumbar`; `Sinus→Waters`; `Panoramic kosong→Standard`
-- [ ] Usia `4→infant, 10→children, 30→adult, kosong→adult`
-- [ ] Fallback adult + first-view bekerja; `below/equal/above` benar
+- [x] `thoracolumbar` tidak salah match `lumbar`; `Sinus→Waters`; `Panoramic kosong→Standard`
+- [x] Usia `4→infant, 10→children, 30→adult, kosong→adult`
+- [x] Fallback adult + first-view bekerja; `below/equal/above` benar
 
 **Verification:**
 
-- [ ] `npm run test -- tests/drl.test.ts`
+- [x] `npm run test -- tests/drl.test.ts`
 
 **Dependencies:** Task 1 (paralel dengan Task 2)
 
@@ -84,14 +87,14 @@
 
 **Acceptance criteria:**
 
-- [ ] `wrangler d1 execute --local --file=./drizzle/0001_init.sql` sukses
-- [ ] Jumlah `drl_entries` = jumlah kombinasi exam/view/age di JSON; query sample Chest PA adult kembalikan `inak 0.2 esak 0.2`
-- [ ] `getDb()` dipakai server routes, tanpa import client-side
+- [x] `wrangler d1 execute --local --file=./drizzle/0001_init.sql` sukses
+- [x] Jumlah `drl_entries` = jumlah kombinasi exam/view/age di JSON; query sample Chest PA adult kembalikan `inak 0.2 esak 0.2`
+- [x] `getDb()` dipakai server routes, tanpa import client-side
 
 **Verification:**
 
-- [ ] `npx wrangler d1 execute radiology-db --local --command="SELECT COUNT(*) FROM drl_entries"`
-- [ ] `npm run check`
+- [x] `npx wrangler d1 execute radiology-db --local --command="SELECT COUNT(*) FROM drl_entries"`
+- [x] `npm run check`
 
 **Dependencies:** Task 2, Task 3
 
@@ -110,13 +113,13 @@
 
 **Acceptance criteria:**
 
-- [ ] POST history tersimpan + GET paginasi 20/page + DELETE row + DELETE all
-- [ ] Export `xlsx` (sheet `History INAK ESAK`, 16 kolom, auto-width) dan `csv` terdownload, filename `history_inak_esak_*.xlsx/csv`
-- [ ] POST drl assess cocok dengan `lib/drl.ts` untuk kasus inak_esak dan dap
+- [x] POST history tersimpan + GET paginasi 20/page + DELETE row + DELETE all
+- [x] Export `xlsx` (sheet `History INAK ESAK`, 16 kolom, auto-width) dan `csv` terdownload, filename `history_inak_esak_*.xlsx/csv`
+- [x] POST drl assess cocok dengan `lib/drl.ts` untuk kasus inak_esak dan dap
 
 **Verification:**
 
-- [ ] `npm run test -- tests/api.test.ts` + curl manual ke dev server + buka xlsx di Excel
+- [x] `npm run test -- tests/api.test.ts` + curl manual ke dev server + buka xlsx di Excel
 
 **Dependencies:** Task 4
 
@@ -136,13 +139,13 @@
 
 **Acceptance criteria:**
 
-- [ ] Upload `.dcm`/JPG tampil di list sesi; pilih file render <2s untuk 5MB
-- [ ] Pasien (ID/Nama/Umur/Gender/Tgl/Study/Modality/BodyPart/View/BB) tampil; JPG tampilkan empty-state "Tidak ada metadata DICOM"
-- [ ] Zoom 0.15–8x, Fit, Reset, pan-drag, label `Ukuran` + `Zoom %`; tabel Tags tampil semua tag (truncate 300 char)
+- [x] Upload `.dcm`/JPG tampil di list sesi; pilih file render <2s untuk 5MB
+- [x] Pasien (ID/Nama/Umur/Gender/Tgl/Study/Modality/BodyPart/View/BB) tampil; JPG tampilkan empty-state "Tidak ada metadata DICOM"
+- [x] Zoom 0.15–8x, Fit, Reset, pan-drag, label `Ukuran` + `Zoom %`; tabel Tags tampil semua tag (truncate 300 char)
 
 **Verification:**
 
-- [ ] Manual 3 file (Chest PA DICOM, Skull DICOM, 1 JPG) + `npm run check`
+- [x] Manual 3 file (Chest PA DICOM, Skull DICOM, 1 JPG) + `npm run check`
 
 **Dependencies:** Task 5
 
@@ -161,13 +164,13 @@
 
 **Acceptance criteria:**
 
-- [ ] DAP hidden saat load, toggle tampil/sembunyi + persist `?tab=`; kVp/mA/s/BB/DAP auto-fill + editable, mAs live 4 desimal
-- [ ] Kalibrasi: Hitung isi µGy/µGy-mAs; Rumus Y butuh ≥2 baris, tampil `y = a × kVp^b` + R², koef terupdate
-- [ ] Hitung validasi kVp>0,mAs>0 (toast Indonesia), hasil 6 desimal + formula trace, auto-append history
+- [x] DAP hidden saat load, toggle tampil/sembunyi + persist `?tab=`; kVp/mA/s/BB/DAP auto-fill + editable, mAs live 4 desimal
+- [x] Kalibrasi: Hitung isi µGy/µGy-mAs; Rumus Y butuh ≥2 baris, tampil `y = a × kVp^b` + R², koef terupdate
+- [x] Hitung validasi kVp>0,mAs>0 (toast Indonesia), hasil 6 desimal + formula trace, auto-append history
 
 **Verification:**
 
-- [ ] Manual: isi 3 baris kalibrasi → Rumus Y → Hitung → history bertambah; `npm run check`
+- [x] Manual: isi 3 baris kalibrasi → Rumus Y → Hitung → history bertambah; `npm run check`
 
 **Dependencies:** Task 5 (paralel aman dengan Task 6, 8)
 
@@ -186,12 +189,12 @@
 
 **Acceptance criteria:**
 
-- [ ] DAP tampil y/IAK_SDD/IAK_SID 6 desimal + DAP 4 desimal + trace; DRL badge benar untuk metric inak_esak dan dap
-- [ ] History: paginasi, hapus 1/all konfirmasi, export dua format; estimasi mSv cocok `DoseCalculator` desktop pada 2 contoh
+- [x] DAP tampil y/IAK_SDD/IAK_SID 6 desimal + DAP 4 desimal + trace; DRL badge benar untuk metric inak_esak dan dap
+- [x] History: paginasi, hapus 1/all konfirmasi, export dua format; estimasi mSv cocok `DoseCalculator` desktop pada 2 contoh
 
 **Verification:**
 
-- [ ] Manual: hitung DAP → badge; hapus baris; download xlsx+csv; `npm run check`
+- [x] Manual: hitung DAP → badge; hapus baris; download xlsx+csv; `npm run check`
 
 **Dependencies:** Task 5 (paralel aman dengan Task 6, 7)
 
@@ -211,13 +214,13 @@
 
 **Acceptance criteria:**
 
-- [ ] `npm run test:e2e` hijau di Chromium terhadap `preview` build
-- [ ] Fixture tanpa PHI (nama/ID dummy); tidak ada gambar asli pasien di repo
-- [ ] Parity 3 angka (INAK, ESAK, DAP) vs desktop ≤1e-4 terdokumentasi
+- [x] `npm run test:e2e` hijau di Chromium terhadap `preview` build
+- [x] Fixture tanpa PHI (nama/ID dummy); tidak ada gambar asli pasien di repo
+- [x] Parity 3 angka (INAK, ESAK, DAP) vs desktop ≤1e-4 terdokumentasi
 
 **Verification:**
 
-- [ ] `npm run build; npm run preview & npm run test:e2e`
+- [x] `npm run build; npm run preview & npm run test:e2e`
 
 **Dependencies:** Task 6, Task 7, Task 8
 
@@ -235,13 +238,13 @@
 
 **Acceptance criteria:**
 
-- [ ] URL `*.pages.dev` live: 3 halaman tanpa console error, D1 bound
-- [ ] Seed remote DRL terverifikasi via `/api/drl/assess` sample
-- [ ] README berisi perintah dev/test/D1/deploy + catatan tanpa-OCR
+- [x] URL `*.pages.dev` live: 3 halaman tanpa console error, D1 bound
+- [x] Seed remote DRL terverifikasi via `/api/drl/assess` sample
+- [x] README berisi perintah dev/test/D1/deploy + catatan tanpa-OCR
 
 **Verification:**
 
-- [ ] `npm run build`, `npm run preview`, `npm run deploy`, curl endpoint remote
+- [x] `npm run build`, `npm run preview`, `npm run deploy`, curl endpoint remote
 
 **Dependencies:** Task 9
 

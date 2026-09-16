@@ -1,5 +1,7 @@
 # Implementation Plan: Radiology Reader Web
 
+> Status: SELESAI 2026-09-16 (semua 10 task + deploy production + pindah akun). Dokumen historis.
+
 ## Overview
 
 Rebuild desktop Radiology Reader as SvelteKit + TypeScript web app on Cloudflare Pages + D1, **tanpa OCR**. Satu alur vertikal dipertahankan: upload DICOM/JPG → metadata + gambar tampil → input eksposur auto-fill → Hitung INAK/ESAK (+ kalibrasi manual) → Hitung DAP → penilaian DRL otomatis → history tersimpan di D1 → export xlsx/csv. Panel DAP tetap **hidden by default** seperti desktop (INAK full-width, toggle untuk tampilkan DAP). Estimasi dosis sederhana mSv ala desktop tetap dipertahankan. UI full Bahasa Indonesia. Deploy v1 ke `*.pages.dev`.
@@ -12,51 +14,51 @@ Keputusan user (2026-09-16): export **xlsx + csv**, DAP hidden, ikuti desktop un
 - **DICOM di browser** (`dicom-parser`, render manual ke canvas): privasi (byte gambar tak pernah upload), hindari limit Worker 10MB. Server hanya terima angka + metadata.
 - **Logika murni di `src/lib/`** (`dose.ts`, `drl.ts`, `calibration.ts`, `dicom.ts`): tanpa import Svelte, bisa di-unit-test dengan golden numbers dari Python desktop.
 - **D1 via drizzle-orm**: schema typed, migrasi `drizzle/*.sql`, seed DRL dari `drl_config.json` desktop. Tabel: `calculations`, `calibration_sets`, `calibration_points`, `drl_entries`.
-- **DAP hidden by default**: tab Dosimetri render INAK full-width + tombol "Tampilkan DAP" (meniru `splitter.setSizes([1,0])` + `hide()` di desktop). State toggle di URL `?tab=dap` agar bisa di-link.
+- **DAP hidden by default**: tab Dosimetri render INAK full-width + tombol "Tampilkan DAP" (meniru `splitter.setSizes([1,0])` + `hide()` di desktop). Toggle murni `$state` (rencana awal `?tab=` dibatalkan: navigasi me-reset input form).
 - **Validasi zod bersama** client + server untuk semua form/API berbahasa Indonesia.
 
 ## Task List
 
 ### Phase 1: Foundation
 
-- [ ] Task 1: Scaffold SvelteKit + Cloudflare + Tailwind + tooling
-- [ ] Task 2: Port dose + calibration math + unit tests
-- [ ] Task 3: Port DRL engine + data + unit tests
+- [x] Task 1: Scaffold SvelteKit + Cloudflare + Tailwind + tooling
+- [x] Task 2: Port dose + calibration math + unit tests
+- [x] Task 3: Port DRL engine + data + unit tests
 
 ### Checkpoint: Foundation
 
-- [ ] `npm run check` hijau, `npm run test` hijau (dose, calibration, DRL incl. kasus thoracolumbar-vs-lumbar)
-- [ ] Review dengan human sebelum lanjut ke DB/API
+- [x] `npm run check` hijau, `npm run test` hijau (dose, calibration, DRL incl. kasus thoracolumbar-vs-lumbar)
+- [x] Review dengan human sebelum lanjut ke DB/API
 
 ### Phase 2: Data + API
 
-- [ ] Task 4: D1 schema + seed DRL + drizzle client
-- [ ] Task 5: API history + export (xlsx+csv) + DRL assess + kalibrasi
+- [x] Task 4: D1 schema + seed DRL + drizzle client
+- [x] Task 5: API history + export (xlsx+csv) + DRL assess + kalibrasi
 
 ### Checkpoint: Data + API
 
-- [ ] CRUD history via `curl`/vitest endpoint, export xlsx+csv terdownload dan terbuka di Excel, DRL endpoint cocok dengan unit
-- [ ] Review dengan human
+- [x] CRUD history via `curl`/vitest endpoint, export xlsx+csv terdownload dan terbuka di Excel, DRL endpoint cocok dengan unit
+- [x] Review dengan human
 
 ### Phase 3: UI slices
 
-- [ ] Task 6: Layout + upload + viewer canvas + patient card + tags (Indonesia)
-- [ ] Task 7: Form INAK/ESAK + tabel kalibrasi + Rumus Y + DAP hidden-toggle
-- [ ] Task 8: Form DAP + kartu DRL + History page + kartu estimasi mSv desktop-parity
+- [x] Task 6: Layout + upload + viewer canvas + patient card + tags (Indonesia)
+- [x] Task 7: Form INAK/ESAK + tabel kalibrasi + Rumus Y + DAP hidden-toggle
+- [x] Task 8: Form DAP + kartu DRL + History page + kartu estimasi mSv desktop-parity
 
 ### Checkpoint: UI slices
 
-- [ ] Alur manual end-to-end jalan: upload fixture → auto-fill → hitung → badge DRL → history → export
-- [ ] Review dengan human
+- [x] Alur manual end-to-end jalan: upload fixture → auto-fill → hitung → badge DRL → history → export
+- [x] Review dengan human
 
 ### Phase 4: Quality + Deploy
 
-- [ ] Task 9: E2E playwright + fixture anonim + parity check vs desktop
-- [ ] Task 10: Build/preview/deploy pages.dev + rapikan docs
+- [x] Task 9: E2E playwright + fixture anonim + parity check vs desktop
+- [x] Task 10: Build/preview/deploy pages.dev + rapikan docs
 
 ### Checkpoint: Complete
 
-- [ ] Semua success criteria spec.md terpenuhi, siap review akhir
+- [x] Semua success criteria spec.md terpenuhi, siap review akhir
 
 ## Dependency Graph
 
@@ -88,3 +90,10 @@ Paralel aman setelah T5: T6, T7, T8 bisa dikerjakan paralel oleh agen berbeda (k
 ## Open Questions
 
 Tidak ada yang blocking. Sisa konfirmasi kecil saat implementasi (teks Indonesia exact untuk badge, lebar kolom Excel) diputuskan mengikuti desktop.
+
+## Catatan Pasca-Implementasi (2026-09-16)
+
+- `fix/workers-types-v4`: root sempat memakai workers-types v5 → `npm ci` Pages ERESOLVE (wrangler 3 minta v4). Fix: pin `^4.20260702.1`.
+- Deploy Pages Git ditiadakan: kolom Deploy/Version dashboard harus netral (`true`) — perintah Workers ditolak di proyek Pages. Deploy via CLI `--branch=main`.
+- Produksi pindah ke akun `agungmalik050@gmail.com` (`chore/new-account-d1`): proyek + D1 dibuat ulang, seed 39 baris, live di `radiology-reader-web-bkw.pages.dev`. History lama kosong — tanpa migrasi data.
+- `drizzle-kit` tidak jadi dipakai (skema kecil, SQL tangan); `format.ts` tidak jadi dibuat (`toFixed` cukup); validasi zod mendarat di Task 5 sesuai kebutuhan API.

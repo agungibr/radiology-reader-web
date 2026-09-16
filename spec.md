@@ -1,7 +1,7 @@
 # Spec: Radiology Reader Web
 
-> Status: DRAFT for human review (Phase 1: Specify).
-> Do not implement until approved. Next: `tasks/plan.md` + `tasks/todo.md`.
+> Status: ACCEPTED & IMPLEMENTED (v0.1.x, live 2026-09-16).
+> Spec ini sumber kebenaran + catatan keputusan. Lihat §11 untuk environment live.
 
 ## Assumptions
 
@@ -254,11 +254,26 @@ Example:
 7. History persists across reload (D1), delete/clear work with confirm, export xlsx opens in Excel with 16 columns.
 8. `npm run build` + `preview` + deploy to `*.pages.dev` works; D1 bound, no Node-only imports in client bundle.
 
-## 10. Open Questions (need answers before Plan)
+## 10. Open Questions (resolved 2026-09-16)
 
-1. Excel export: xlsx only, or must also keep CSV? (desktop history had both)
-2. DAP panel previously hidden (`hide()` in center_panel) — in web show both INAK and DAP side-by-side?
-3. Keep simplified mSv dose estimator (`DoseCalculator`, chest-X-ray comparison) or drop it? Desktop had it half-wired.
-4. Language: full Indonesian UI, or Indonesian + English toggle?
-5. Do we need to import old desktop history (SQLite `radiology_reader.db`) into D1 once?
-6. Custom domain or `*.pages.dev` enough for v1?
+1. Excel export → **xlsx + csv** (keduanya).
+2. DAP panel → **hidden by default** seperti desktop, toggle `$state` murni (tanpa `?tab=` agar input tidak ter-reset).
+3. Estimator mSv → **dipertahankan** mengikuti desktop (`DoseEstimateCard`).
+4. Bahasa → **full Indonesia**, tanpa toggle Inggris.
+5. Migrasi history desktop → **tidak** (history lama kosong).
+6. Domain → **`*.pages.dev`** cukup untuk v1.
+
+## 11. Live Environment (per 2026-09-16)
+
+- App: https://radiology-reader-web-bkw.pages.dev (akun `agungmalik050@gmail.com`).
+  URL lama `radiology-reader-web.pages.dev` milik akun lain (jangan dipakai).
+- D1 `radiology-db` (`9ef72a08-e6ef-45cc-8c37-51d77378bb52`), seed 39 baris DRL.
+- Deploy: Git Pages ditiadakan — deploy via CLI `npm run build` + `wrangler pages deploy --branch=main`
+  (kolom Deploy/Version dashboard harus netral: `true`, karena perintah Workers ditolak di proyek Pages).
+- `wrangler` CLI tetap v3; `@cloudflare/workers-types` di-pin v4 (v5 merusak `npm ci` — ERESOLVE vs peer wrangler 3).
+
+Deviasi implementasi vs §2 (disengaja, parity visual/fungsi tetap):
+
+- Tags: Tag hex + VR + nilai (tanpa deskripsi — dicom-parser tak berkamus).
+- Teks batas DAP `120` bukan `120.0` (format angka JS).
+- File DICOM wajib Part-10 valid (butuh meta header 0002,0010 — batas dicom-parser; desktop `force=True` lebih toleran).
