@@ -12,16 +12,16 @@ npm run dev
 
 ## Commands
 
-| Command           | Description                                  |
-| ----------------- | -------------------------------------------- |
-| `npm run dev`     | Dev server                                   |
-| `npm run check`   | svelte-check + tsc                           |
-| `npm run lint`    | eslint + prettier check                      |
-| `npm run test`    | Unit tests (vitest)                          |
-| `npm run test:e2e`| E2E tests (playwright, chromium)             |
-| `npm run build`   | Production build (adapter-cloudflare)        |
-| `npm run preview` | Preview production build                     |
-| `npm run deploy`  | Deploy ke Cloudflare Pages                   |
+| Command            | Description                           |
+| ------------------ | ------------------------------------- |
+| `npm run dev`      | Dev server                            |
+| `npm run check`    | svelte-check + tsc                    |
+| `npm run lint`     | eslint + prettier check               |
+| `npm run test`     | Unit tests (vitest)                   |
+| `npm run test:e2e` | E2E tests (playwright, chromium)      |
+| `npm run build`    | Production build (adapter-cloudflare) |
+| `npm run preview`  | Preview production build              |
+| `npm run deploy`   | Deploy ke Cloudflare Pages            |
 
 ## Architecture
 
