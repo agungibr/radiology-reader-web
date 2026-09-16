@@ -1,4 +1,7 @@
 .svelte-kit/
 build/
+.wrangler/
+test-results/
+playwright-report/
 node_modules/
 package-lock.json
