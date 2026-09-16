@@ -10,4 +10,4 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "radiology-db"
-database_id = "c82ef534-bba0-4229-864f-536f7caa1d24"
+database_id = "9ef72a08-e6ef-45cc-8c37-51d77378bb52"
