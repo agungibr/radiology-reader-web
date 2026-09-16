@@ -37,7 +37,9 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
 
 test('halaman history tampil dengan tombol export', async ({ page }) => {
   await page.goto('/history');
-  await expect(page.getByRole('heading', { name: 'History Perhitungan INAK / ESAK' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'History Perhitungan INAK / ESAK' })
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: /Simpan Excel/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Simpan CSV' })).toBeVisible();
 });
