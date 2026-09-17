@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const pages = [
-  { path: '/', heading: 'Viewer' },
+  { path: '/', heading: 'Browser' },
   { path: '/dosimetry', heading: 'Dosimetri' },
   { path: '/history', heading: 'History' }
 ];

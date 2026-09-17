@@ -56,9 +56,9 @@
   const columns: string[] = $derived(display.length > 0 ? Object.keys(display[0] as object) : []);
 </script>
 
-<div class="overflow-auto border bg-white">
+<div class="panel slim-scroll overflow-auto">
   <table class="w-full text-xs">
-    <thead class="sticky top-0 bg-gray-100">
+    <thead class="sticky top-0 bg-slate-100">
       <tr>
         {#each columns as c (c)}
           <th class="whitespace-nowrap p-1 text-left">{c}</th>

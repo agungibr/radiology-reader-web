@@ -88,9 +88,9 @@
   }
 </script>
 
-<section class="border bg-white p-4" aria-label="Parameter eksposur">
+<section class="panel p-4" aria-label="Parameter eksposur">
   <h2 class="text-sm font-bold">Parameter Eksposur</h2>
-  <p class="mb-2 text-xs text-gray-500">Otomatis dari DICOM atau isi manual.</p>
+  <p class="mb-2 text-xs text-slate-500">Otomatis dari DICOM atau isi manual.</p>
 
   <div class="grid grid-cols-[110px_1fr_auto] items-center gap-2 text-sm">
     <label for="kvp">kVp</label>
@@ -161,7 +161,7 @@
 
   <button
     type="button"
-    class="mt-3 w-full bg-amber-500 py-2 text-sm font-bold disabled:opacity-50"
+    class="btn-primary mt-3 w-full py-2 text-sm disabled:opacity-50"
     disabled={saving}
     onclick={hitung}
   >
@@ -170,9 +170,9 @@
 
   {#if result}
     <div class="mt-3 border-t pt-2">
-      <p class="text-xs text-gray-500">INAK (Incident Air Kerma)</p>
+      <p class="text-xs text-slate-500">INAK (Incident Air Kerma)</p>
       <p class="font-mono text-xl font-bold">{result.inak.toFixed(6)} mGy</p>
-      <p class="mt-1 text-xs text-gray-500">ESAK (Entrance Surface Air Kerma)</p>
+      <p class="mt-1 text-xs text-slate-500">ESAK (Entrance Surface Air Kerma)</p>
       <p class="font-mono text-2xl font-bold text-blue-700">{result.esak.toFixed(6)} mGy</p>
     </div>
   {/if}
@@ -183,30 +183,30 @@
         DRL Assessment — {drl.examination || '?'} ({drl.metric.toUpperCase() || '?'})
       </p>
       {#if drl.matched}
-        <p class="text-xs text-gray-500">View: {drl.view} | Kelompok: {drl.ageGroupLabel}</p>
+        <p class="text-xs text-slate-500">View: {drl.view} | Kelompok: {drl.ageGroupLabel}</p>
         {#if drl.metric === 'inak_esak'}
           <div class="mt-1 flex items-center gap-2">
             <span class="w-12 font-bold">INAK</span>
             <span class="font-mono">{result?.inak.toFixed(6)} mGy</span>
-            <span class="text-xs text-gray-500">/ DRL {drl.drlInak} mGy</span>
+            <span class="text-xs text-slate-500">/ DRL {drl.drlInak} mGy</span>
             <DrlBadge status={drl.inakStatus ?? ''} />
           </div>
           <div class="mt-1 flex items-center gap-2">
             <span class="w-12 font-bold">ESAK</span>
             <span class="font-mono">{result?.esak.toFixed(6)} mGy</span>
-            <span class="text-xs text-gray-500">/ DRL {drl.drlEsak} mGy</span>
+            <span class="text-xs text-slate-500">/ DRL {drl.drlEsak} mGy</span>
             <DrlBadge status={drl.esakStatus ?? ''} />
           </div>
         {:else}
           <div class="mt-1 flex items-center gap-2">
             <span class="w-12 font-bold">DAP</span>
             <span class="font-mono">{dap !== null ? `${dap.toFixed(4)} mGy·cm²` : '—'}</span>
-            <span class="text-xs text-gray-500">/ DRL {drl.drlDap} mGy·cm²</span>
+            <span class="text-xs text-slate-500">/ DRL {drl.drlDap} mGy·cm²</span>
             <DrlBadge status={drl.dapStatus ?? ''} />
           </div>
         {/if}
       {:else}
-        <p class="text-xs text-gray-500 italic">{drl.message}</p>
+        <p class="text-xs text-slate-500 italic">{drl.message}</p>
       {/if}
     </div>
   {/if}
