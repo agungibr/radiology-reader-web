@@ -146,14 +146,14 @@
         <li class="group flex items-center gap-1">
           <button
             type="button"
-            class={`w-full truncate rounded p-1.5 text-left transition-colors ${i === selected ? 'bg-cyan-700 font-semibold text-white' : 'hover:bg-slate-100'}`}
+            class={`w-full truncate rounded p-1.5 text-left transition-colors ${i === selected ? 'bg-cyan-700 font-semibold text-white' : 'hover:bg-slate-800'}`}
             onclick={() => void select(i)}
           >
             {f.name}
           </button>
           <button
             type="button"
-            class="rounded px-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 hover:text-red-700 focus-visible:opacity-100"
+            class="rounded px-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-950 hover:text-red-300 focus-visible:opacity-100"
             aria-label={`Hapus ${f.name}`}
             onclick={() => void removeFile(i)}
           >
@@ -163,16 +163,16 @@
       {/each}
     </ul>
     {#if files.length === 0}
-      <p class="mt-2 text-xs text-slate-500">Seret file ke viewport atau klik Buka File.</p>
+      <p class="mt-2 text-xs text-slate-400">Seret file ke viewport atau klik Buka File.</p>
     {:else}
-      <p class="tnum mt-2 font-mono text-[11px] text-slate-500">{files.length} file</p>
+      <p class="tnum mt-2 font-mono text-[11px] text-slate-400">{files.length} file</p>
     {/if}
   </section>
 
   <!-- Viewport -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class={`rounded-lg border bg-slate-950 p-3 transition-colors ${dragging ? 'border-cyan-400' : 'border-slate-800'}`}
+    class={`rounded-lg border border-slate-800 bg-slate-900 p-3 transition-colors ${dragging ? 'border-cyan-400' : ''}`}
     ondragover={(e) => {
       e.preventDefault();
       dragging = true;
@@ -212,7 +212,7 @@
         {error}
       </p>
     {/if}
-    <p class="tnum mt-2 font-mono text-[11px] text-slate-500">
+    <p class="tnum mt-2 font-mono text-[11px] text-slate-400">
       {current
         ? `${current.name} · ${current.kind === 'dicom' ? `DICOM · ${currentTags.length} tag` : 'gambar'}`
         : 'Siap'}

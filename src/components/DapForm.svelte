@@ -108,14 +108,14 @@
 
   {#if result}
     <div class="mt-3 border-t pt-2">
-      <p class="text-xs text-slate-500">y kVp</p>
+      <p class="text-xs text-slate-400">y kVp</p>
       <p class="font-mono font-bold">{result.yKvp.toFixed(6)}</p>
-      <p class="mt-1 text-xs text-slate-500">IAK SDD (mGy)</p>
+      <p class="mt-1 text-xs text-slate-400">IAK SDD (mGy)</p>
       <p class="font-mono font-bold">{result.iakSddMgy.toFixed(6)} mGy</p>
-      <p class="mt-1 text-xs text-slate-500">IAK SID (mGy)</p>
+      <p class="mt-1 text-xs text-slate-400">IAK SID (mGy)</p>
       <p class="font-mono font-bold">{result.iakSidMgy.toFixed(6)} mGy</p>
-      <p class="mt-1 text-xs text-slate-500">DAP (mGy·cm²)</p>
-      <p class="tnum font-mono text-2xl font-bold text-cyan-800">
+      <p class="mt-1 text-xs text-slate-400">DAP (mGy·cm²)</p>
+      <p class="tnum font-mono text-2xl font-bold text-cyan-300">
         {result.dapMgyCm2.toFixed(4)} mGy·cm²
       </p>
     </div>
@@ -125,29 +125,29 @@
     <div class="mt-3 border-t pt-2 text-sm">
       <p class="font-bold">DRL Assessment — DAP DICOM</p>
       {#if drl.matched && drl.metric === 'dap'}
-        <p class="text-xs text-slate-500">
+        <p class="text-xs text-slate-400">
           {drl.examination} | View: {drl.view} | {drl.ageGroupLabel}
         </p>
         <div class="mt-1 flex items-center gap-2">
           <span class="font-mono">{dicomDap !== null ? `${dicomDap.toFixed(4)} mGy·cm²` : '—'}</span
           >
-          <span class="text-xs text-slate-500">/ DRL {drl.drlDap} mGy·cm²</span>
+          <span class="text-xs text-slate-400">/ DRL {drl.drlDap} mGy·cm²</span>
           <DrlBadge status={drl.dapStatus ?? ''} />
         </div>
       {:else if drl.matched}
-        <p class="text-xs text-slate-500">
+        <p class="text-xs text-slate-400">
           Pemeriksaan ini memakai batas INAK/ESAK — lihat panel INAK/ESAK.
         </p>
       {:else}
-        <p class="text-xs text-slate-500 italic">{drl.message}</p>
+        <p class="text-xs text-slate-400 italic">{drl.message}</p>
         {#if dicomDap === null}
-          <p class="text-xs text-slate-500 italic">DAP tidak ada di tag DICOM (0018,115E).</p>
+          <p class="text-xs text-slate-400 italic">DAP tidak ada di tag DICOM (0018,115E).</p>
         {/if}
       {/if}
     </div>
   {/if}
 
   {#if notice}
-    <p role="alert" class="mt-2 text-sm text-red-700">{notice}</p>
+    <p role="alert" class="mt-2 text-sm text-red-300">{notice}</p>
   {/if}
 </section>

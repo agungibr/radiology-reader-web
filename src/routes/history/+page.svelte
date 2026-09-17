@@ -59,7 +59,7 @@
 
 <div class="p-4">
   <h1 class="text-lg font-bold tracking-tight">History Perhitungan INAK / ESAK</h1>
-  <p class="tnum text-sm text-slate-500">{total} data</p>
+  <p class="tnum text-sm text-slate-400">{total} data</p>
 
   <div class="mt-2 flex flex-wrap gap-2 text-sm">
     <a class="btn-primary px-3 py-1" href={resolve('/api/history/export?format=xlsx')}>
@@ -68,7 +68,7 @@
     <a class="toolbtn" href={resolve('/api/history/export?format=csv')}>Simpan CSV</a>
     <button
       type="button"
-      class="toolbtn border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50"
+      class="toolbtn border-red-800 text-red-300 hover:border-red-700 hover:bg-red-950"
       disabled={busy || rows.length === 0}
       onclick={hapusSemua}
     >
@@ -77,7 +77,7 @@
   </div>
 
   {#if error}
-    <p role="alert" class="mt-2 border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+    <p role="alert" class="mt-2 rounded border border-red-800 bg-red-950 p-2 text-sm text-red-200">
       {error}
     </p>
   {/if}
@@ -107,6 +107,6 @@
   </div>
 
   {#if loading}
-    <p class="mt-2 text-sm text-slate-500">Memuat…</p>
+    <p class="mt-2 text-sm text-slate-400">Memuat…</p>
   {/if}
 </div>

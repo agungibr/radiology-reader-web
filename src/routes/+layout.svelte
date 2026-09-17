@@ -40,7 +40,7 @@
 </main>
 
 <footer
-  class="flex items-center gap-4 border-t border-slate-200 bg-white px-4 py-1.5 font-mono text-[11px] text-slate-500"
+  class="flex items-center gap-4 border-t border-slate-800 bg-slate-900 px-4 py-1.5 font-mono text-[11px] text-slate-400"
 >
   <span>DRL nasional · 39 baris referensi</span>
   <span class="ml-auto">Gambar tidak pernah diunggah — parsing di browser</span>

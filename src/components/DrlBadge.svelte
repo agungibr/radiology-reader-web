@@ -5,12 +5,12 @@
 
   const color = $derived(
     status === 'above'
-      ? 'bg-red-100 text-red-700 border-red-300'
+      ? 'bg-red-950 text-red-300 border-red-800'
       : status === 'equal'
-        ? 'bg-amber-100 text-amber-800 border-amber-300'
+        ? 'bg-amber-950 text-amber-300 border-amber-800'
         : status === 'below'
-          ? 'bg-green-100 text-green-700 border-green-300'
-          : 'bg-gray-100 text-gray-500 border-gray-300'
+          ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+          : 'bg-slate-800 text-slate-400 border-slate-700'
   );
 </script>
 
