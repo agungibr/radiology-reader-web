@@ -121,16 +121,16 @@
   <div class="mt-2 flex flex-wrap gap-2 text-sm">
     <button type="button" class="border px-2 py-1" onclick={tambahBaris}>+ Baris</button>
     <button type="button" class="border px-2 py-1" onclick={hapusBaris}>− Baris</button>
-    <button type="button" class="border bg-amber-500 px-2 py-1 font-bold" onclick={hitung}
-      >Hitung</button
-    >
-    <button type="button" class="border bg-amber-500 px-2 py-1 font-bold" onclick={tampilkanRumus}>
+    <button type="button" class="toolbtn" onclick={hitung}>Hitung</button>
+    <button type="button" class="btn-primary px-2 py-1 text-sm" onclick={tampilkanRumus}>
       Tampilkan Rumus Y
     </button>
   </div>
 
   {#if formula}
-    <p class="mt-2 bg-indigo-950 p-2 text-center font-mono font-bold text-indigo-200">{formula}</p>
+    <p class="mt-2 rounded bg-slate-950 p-2 text-center font-mono font-bold text-cyan-100">
+      {formula}
+    </p>
     <p class="text-center text-xs text-slate-500">{r2text} — koefisien a dan b diperbarui</p>
   {/if}
   {#if error}

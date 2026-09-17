@@ -12,7 +12,9 @@
   ];
 </script>
 
-<header class="border-b border-slate-800 bg-slate-950 text-slate-100">
+<header
+  class="border-b border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100"
+>
   <nav class="flex items-center gap-1 px-4 py-2" aria-label="Navigasi utama">
     <span class="mr-3 flex items-center gap-2 text-sm font-bold tracking-tight">
       <span

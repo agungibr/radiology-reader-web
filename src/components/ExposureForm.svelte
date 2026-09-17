@@ -113,13 +113,13 @@
     <span class="text-xs text-green-700">{meta?.exposureTimeS != null ? 'DICOM' : ''}</span>
 
     <span>mAs (mA × s)</span>
-    <span class="font-mono font-bold text-amber-600"
+    <span class="tnum font-mono font-bold text-cyan-800"
       >{mas !== null ? `${mas.toFixed(4)} mAs` : '—'}</span
     >
     <span></span>
 
     <span>DAP DICOM</span>
-    <span class="font-mono font-bold text-emerald-600">
+    <span class="tnum font-mono font-bold text-slate-900">
       {dap !== null ? `${dap.toFixed(4)} mGy·cm²` : '—'}
     </span>
     <span></span>
@@ -171,9 +171,9 @@
   {#if result}
     <div class="mt-3 border-t pt-2">
       <p class="text-xs text-slate-500">INAK (Incident Air Kerma)</p>
-      <p class="font-mono text-xl font-bold">{result.inak.toFixed(6)} mGy</p>
+      <p class="tnum font-mono text-xl font-bold">{result.inak.toFixed(6)} mGy</p>
       <p class="mt-1 text-xs text-slate-500">ESAK (Entrance Surface Air Kerma)</p>
-      <p class="font-mono text-2xl font-bold text-blue-700">{result.esak.toFixed(6)} mGy</p>
+      <p class="tnum font-mono text-2xl font-bold text-cyan-800">{result.esak.toFixed(6)} mGy</p>
     </div>
   {/if}
 
