@@ -43,7 +43,7 @@
 
 <section class="panel p-4" aria-label="Estimasi dosis">
   <h2 class="text-sm font-bold">Estimasi Dosis (mSv)</h2>
-  <p class="mb-2 text-xs text-slate-500">Gambaran sederhana, bukan pengganti kalibrasi klinis.</p>
+  <p class="mb-2 text-xs text-slate-400">Gambaran sederhana, bukan pengganti kalibrasi klinis.</p>
 
   <div class="grid grid-cols-[110px_1fr] items-center gap-2 text-sm">
     <label for="est-bb">Berat (kg)</label>
@@ -59,12 +59,12 @@
     <input id="est-exam" type="text" class="border px-2 py-1" bind:value={examType} />
   </div>
 
-  <button type="button" class="mt-2 w-full border py-2 text-sm font-bold" onclick={hitung}>
+  <button type="button" class="toolbtn mt-2 w-full justify-center py-2 font-bold" onclick={hitung}>
     Hitung Estimasi
   </button>
 
   {#if dose !== null}
     <p class="mt-2 font-mono text-2xl font-bold">{dose.toFixed(2)} mSv</p>
-    <p class="text-xs text-slate-500">{compare}</p>
+    <p class="text-xs text-slate-400">{compare}</p>
   {/if}
 </section>

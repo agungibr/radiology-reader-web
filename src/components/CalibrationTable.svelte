@@ -70,13 +70,13 @@
 
 <section class="panel p-4" aria-label="Data kalibrasi">
   <h2 class="text-sm font-bold">Data Kalibrasi</h2>
-  <p class="mb-2 text-xs text-slate-500">
+  <p class="mb-2 text-xs text-slate-400">
     kVp &amp; mGy diisi manual. mAs default 20, bisa diubah.
   </p>
 
   <table class="w-full text-sm">
     <thead>
-      <tr class="bg-slate-100 text-left">
+      <tr class="bg-slate-800 text-left">
         <th class="p-1">kVp</th>
         <th class="p-1">mAs</th>
         <th class="p-1">mGy</th>
@@ -131,9 +131,9 @@
     <p class="mt-2 rounded bg-slate-950 p-2 text-center font-mono font-bold text-cyan-100">
       {formula}
     </p>
-    <p class="text-center text-xs text-slate-500">{r2text} — koefisien a dan b diperbarui</p>
+    <p class="text-center text-xs text-slate-400">{r2text} — koefisien a dan b diperbarui</p>
   {/if}
   {#if error}
-    <p role="alert" class="mt-2 text-sm text-red-700">{error}</p>
+    <p role="alert" class="mt-2 text-sm text-red-300">{error}</p>
   {/if}
 </section>

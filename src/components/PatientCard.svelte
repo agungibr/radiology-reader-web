@@ -21,11 +21,11 @@
   {#if metadata}
     <dl class="grid grid-cols-[110px_1fr] gap-y-1 text-sm">
       {#each rows as r (r.label)}
-        <dt class="text-slate-500">{r.label}</dt>
+        <dt class="text-slate-400">{r.label}</dt>
         <dd>{r.get(metadata)}</dd>
       {/each}
     </dl>
   {:else}
-    <p class="text-sm text-slate-500">Tidak ada metadata DICOM. Isi manual di halaman Dosimetri.</p>
+    <p class="text-sm text-slate-400">Tidak ada metadata DICOM. Isi manual di halaman Dosimetri.</p>
   {/if}
 </section>

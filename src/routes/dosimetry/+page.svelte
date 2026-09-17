@@ -29,7 +29,7 @@
       {showDap ? 'Sembunyikan DAP' : 'Tampilkan DAP'}
     </button>
     {#if file}
-      <span class="tnum ml-auto hidden font-mono text-xs text-slate-500 sm:inline">
+      <span class="tnum ml-auto hidden font-mono text-xs text-slate-400 sm:inline">
         {file.name}
       </span>
     {/if}
@@ -59,7 +59,7 @@
   {/key}
 
   {#if !file}
-    <p class="panel mt-4 border-amber-300 bg-amber-50 p-3 text-sm">
+    <p class="panel mt-4 border-amber-800 bg-amber-950 p-3 text-sm text-amber-200">
       Belum ada file aktif. Buka gambar dulu di halaman Viewer agar parameter terisi otomatis — atau
       isi semua manual di atas.
     </p>

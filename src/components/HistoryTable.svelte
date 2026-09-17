@@ -66,7 +66,7 @@
 
 <div class="panel slim-scroll overflow-auto">
   <table class="tnum w-full font-mono text-xs">
-    <thead class="sticky top-0 bg-slate-100">
+    <thead class="sticky top-0 bg-slate-800">
       <tr>
         {#each columns as c (c)}
           <th class="whitespace-nowrap p-1 text-left">{c}</th>
@@ -83,7 +83,7 @@
           <td class="p-1">
             <button
               type="button"
-              class="text-red-700 hover:underline disabled:opacity-50"
+              class="text-red-300 hover:underline disabled:opacity-50"
               disabled={deleting}
               onclick={() => rows[i] && onDelete(rows[i].id)}
             >
@@ -94,4 +94,7 @@
       {/each}
     </tbody>
   </table>
+  {#if display.length === 0}
+    <p class="p-4 text-center text-sm text-slate-400">Belum ada data history.</p>
+  {/if}
 </div>
