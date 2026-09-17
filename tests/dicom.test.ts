@@ -1,30 +1,38 @@
 import { describe, expect, it } from 'vitest';
 import { extractPixels, isDicomBuffer, listTags, parseDicom, renderGrayscale } from '$lib/dicom';
 
-// --- Synthetic Explicit-VR Little-Endian DICOM builder (2x2, 8-bit) ---
+type TestElement = [number, number, string, Uint8Array | number[] | string | number];
 
 function elem(
   group: number,
   element: number,
   vr: string,
-  value: Uint8Array | number[] | string | number
+  value: Uint8Array | number[] | string | number,
+  littleEndian = true,
+  implicit = false
 ): Uint8Array {
-  const bytes: number[] = [group & 0xff, group >> 8, element & 0xff, element >> 8];
-  bytes.push(vr.charCodeAt(0), vr.charCodeAt(1));
+  const word = (n: number) =>
+    littleEndian ? [n & 0xff, (n >> 8) & 0xff] : [(n >> 8) & 0xff, n & 0xff];
+  const lengthBytes = (n: number) =>
+    littleEndian ? [...word(n), ...word(n >>> 16)] : [...word(n >>> 16), ...word(n)];
+  const bytes: number[] = [...word(group), ...word(element)];
+  if (!implicit) bytes.push(vr.charCodeAt(0), vr.charCodeAt(1));
   let val: Uint8Array;
   if (typeof value === 'string') {
     val = new TextEncoder().encode(value);
     if (val.length % 2 === 1) val = new Uint8Array([...val, vr === 'UI' ? 0x00 : 0x20]);
   } else if (typeof value === 'number') {
-    val = new Uint8Array([value & 0xff, (value >> 8) & 0xff]);
+    val = new Uint8Array(word(value));
   } else {
     val = value instanceof Uint8Array ? value : new Uint8Array(value);
   }
   const longVr = ['OB', 'OW', 'OF', 'SQ', 'UC', 'UR', 'UT', 'UN'].includes(vr);
-  if (longVr) {
-    bytes.push(0, 0, val.length & 0xff, (val.length >> 8) & 0xff, 0, 0);
+  if (implicit) {
+    bytes.push(...lengthBytes(val.length));
+  } else if (longVr) {
+    bytes.push(0, 0, ...lengthBytes(val.length));
   } else {
-    bytes.push(val.length & 0xff, (val.length >> 8) & 0xff);
+    bytes.push(...word(val.length));
   }
   return new Uint8Array([...bytes, ...val]);
 }
@@ -71,6 +79,101 @@ function buildDicom(extra: Uint8Array[] = []): ArrayBuffer {
   return out.buffer as ArrayBuffer;
 }
 
+function fixture(
+  overrides: TestElement[] = [],
+  transferSyntax = '1.2.840.10008.1.2.1'
+): ArrayBuffer {
+  const littleEndian = transferSyntax !== '1.2.840.10008.1.2.2';
+  const implicit = transferSyntax === '1.2.840.10008.1.2';
+  const defaults: TestElement[] = [
+    [0x0028, 0x0002, 'US', 1],
+    [0x0028, 0x0004, 'CS', 'MONOCHROME2'],
+    [0x0028, 0x0010, 'US', 2],
+    [0x0028, 0x0011, 'US', 2],
+    [0x0028, 0x0100, 'US', 8],
+    [0x0028, 0x0101, 'US', 8],
+    [0x0028, 0x0102, 'US', 7],
+    [0x0028, 0x0103, 'US', 0],
+    [0x7fe0, 0x0010, 'OB', [0, 85, 170, 255]]
+  ];
+  const tags = new Map(defaults.map((tag) => [`${tag[0]}:${tag[1]}`, tag]));
+  for (const tag of overrides) tags.set(`${tag[0]}:${tag[1]}`, tag);
+  const parts = [
+    new Uint8Array(128),
+    new TextEncoder().encode('DICM'),
+    elem(0x0002, 0x0001, 'OB', [0, 1]),
+    elem(0x0002, 0x0002, 'UI', '1.2.840.10008.5.1.4.1.1.7'),
+    elem(0x0002, 0x0003, 'UI', '1.2.3.4'),
+    elem(0x0002, 0x0010, 'UI', transferSyntax),
+    ...Array.from(tags.values())
+      .sort((a, b) => a[0] - b[0] || a[1] - b[1])
+      .map(([group, element, vr, value]) => elem(group, element, vr, value, littleEndian, implicit))
+  ];
+  if (transferSyntax === '1.2.840.10008.1.2.5') {
+    const rle = new Uint8Array(70);
+    rle[0] = 1;
+    rle[4] = 64;
+    rle.set([3, 0, 85, 170, 255], 64);
+    parts[parts.length - 1] = new Uint8Array([
+      0xe0,
+      0x7f,
+      0x10,
+      0,
+      0x4f,
+      0x42,
+      0,
+      0,
+      255,
+      255,
+      255,
+      255,
+      0xfe,
+      0xff,
+      0,
+      0xe0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0xfe,
+      0xff,
+      0,
+      0xe0,
+      rle.length,
+      0,
+      0,
+      0,
+      ...rle,
+      0xfe,
+      0xff,
+      0xdd,
+      0xe0,
+      0,
+      0,
+      0,
+      0
+    ]);
+  }
+  const out = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out.buffer as ArrayBuffer;
+}
+
+function pixelWords(values: number[], littleEndian: boolean): Uint8Array {
+  const bytes = new Uint8Array(values.length * 2);
+  const view = new DataView(bytes.buffer);
+  values.forEach((value, index) => view.setUint16(index * 2, value, littleEndian));
+  return bytes;
+}
+
 describe('isDicomBuffer', () => {
   it('mengenali magic DICM setelah preamble 128 byte', () => {
     expect(isDicomBuffer(buildDicom())).toBe(true);
@@ -79,6 +182,74 @@ describe('isDicomBuffer', () => {
 });
 
 describe('parseDicom', () => {
+  it.each([
+    ['000Y', '0'],
+    ['045Y', '45'],
+    ['999Y', '999'],
+    ['011M', '0'],
+    ['012M', '1'],
+    ['023M', '1'],
+    ['024M', '2'],
+    ['051W', '0'],
+    ['052W', '1'],
+    ['103W', '1'],
+    ['104W', '2'],
+    ['364D', '0'],
+    ['365D', '1'],
+    ['729D', '1'],
+    ['730D', '2']
+  ])('converts PatientAge %s to %s completed years', (as, expected) => {
+    expect(parseDicom(fixture([[0x0010, 0x1010, 'AS', as]])).age).toBe(expected);
+  });
+
+  it.each(['', '45Y', '0045Y', '045', '045Q', '045y', '-01Y', '1.5Y', 'ABCY'])(
+    'returns empty for invalid PatientAge %s',
+    (as) => {
+      expect(parseDicom(fixture([[0x0010, 0x1010, 'AS', as]])).age).toBe('');
+    }
+  );
+
+  it.each([
+    ['19900615', '20240614', '33'],
+    ['19900615', '20240615', '34'],
+    ['19900615', '20240616', '34'],
+    ['20240101', '20240101', '0'],
+    ['20000229', '20230228', '22'],
+    ['20000229', '20230301', '23'],
+    ['20000229', '20240229', '24']
+  ])('prefers valid dates %s / %s over PatientAge', (birth, study, expected) => {
+    expect(
+      parseDicom(
+        fixture([
+          [0x0010, 0x0030, 'DA', birth],
+          [0x0008, 0x0020, 'DA', study],
+          [0x0010, 0x1010, 'AS', '099Y']
+        ])
+      ).age
+    ).toBe(expected);
+  });
+
+  it.each([
+    ['19900230', '20240101'],
+    ['19901301', '20240101'],
+    ['19900100', '20240101'],
+    ['00000101', '20240101'],
+    ['19900101', '20240230'],
+    ['20250101', '20240101'],
+    ['19000229', '20240101'],
+    ['19900101', '']
+  ])('falls back when dates %s / %s cannot establish age', (birth, study) => {
+    expect(
+      parseDicom(
+        fixture([
+          [0x0010, 0x0030, 'DA', birth],
+          [0x0008, 0x0020, 'DA', study],
+          [0x0010, 0x1010, 'AS', '024M']
+        ])
+      ).age
+    ).toBe('2');
+  });
+
   it('mengekstrak metadata pasien, studi, dan eksposur', () => {
     const meta = parseDicom(buildDicom());
 
@@ -126,6 +297,130 @@ describe('parseDicom', () => {
 });
 
 describe('extractPixels', () => {
+  it.each([
+    ['implicit little-endian', '1.2.840.10008.1.2'],
+    ['explicit little-endian', '1.2.840.10008.1.2.1'],
+    ['explicit big-endian', '1.2.840.10008.1.2.2']
+  ])('decodes signed and unsigned 8/16-bit %s pixels', (_name, syntax) => {
+    for (const bits of [8, 16]) {
+      for (const signed of [0, 1]) {
+        const values = signed ? [-128, -43, 42, 127] : [0, 85, 170, 255];
+        const pixels =
+          bits === 8
+            ? new Uint8Array(values)
+            : pixelWords(values, syntax !== '1.2.840.10008.1.2.2');
+        const px = extractPixels(
+          fixture(
+            [
+              [0x0028, 0x0100, 'US', bits],
+              [0x0028, 0x0101, 'US', bits],
+              [0x0028, 0x0102, 'US', bits - 1],
+              [0x0028, 0x0103, 'US', signed],
+              [0x7fe0, 0x0010, bits === 8 ? 'OB' : 'OW', pixels]
+            ],
+            syntax
+          )
+        );
+        expect(Array.from(px.gray)).toEqual([0, 85, 170, 255]);
+      }
+    }
+  });
+
+  it.each([0, 1])('uses stored bits and high bit with representation %s', (signed) => {
+    const values = signed ? [0x800, 0xd55, 0x2aa, 0x7ff] : [0, 0x555, 0xaaa, 0xfff];
+    const px = extractPixels(
+      fixture([
+        [0x0028, 0x0100, 'US', 16],
+        [0x0028, 0x0101, 'US', 12],
+        [0x0028, 0x0102, 'US', 14],
+        [0x0028, 0x0103, 'US', signed],
+        [
+          0x7fe0,
+          0x0010,
+          'OW',
+          pixelWords(
+            values.map((v, i) => (v << 3) | (i % 2 ? 0x8007 : 0)),
+            true
+          )
+        ]
+      ])
+    );
+    expect(Array.from(px.gray)).toEqual([0, 85, 170, 255]);
+  });
+
+  it('applies slope and intercept before windowing', () => {
+    const px = extractPixels(
+      fixture([
+        [0x0028, 0x1052, 'DS', '-100'],
+        [0x0028, 0x1053, 'DS', '2'],
+        [0x0028, 0x1050, 'DS', '200'],
+        [0x0028, 0x1051, 'DS', '400'],
+        [0x7fe0, 0x0010, 'OB', [0, 100, 200, 255]]
+      ])
+    );
+    expect(Array.from(px.gray)).toEqual([0, 64, 191, 255]);
+  });
+
+  it('applies negative slope before min-max normalization', () => {
+    const px = extractPixels(fixture([[0x0028, 0x1053, 'DS', '-2']]));
+    expect(Array.from(px.gray)).toEqual([255, 170, 85, 0]);
+  });
+
+  it('preserves MONOCHROME1 inversion and constant-image output', () => {
+    const px = extractPixels(
+      fixture([
+        [0x0028, 0x0004, 'CS', 'MONOCHROME1'],
+        [0x7fe0, 0x0010, 'OB', [42, 42, 42, 42]]
+      ])
+    );
+    expect(px.invert).toBe(true);
+    expect(Array.from(px.gray)).toEqual([0, 0, 0, 0]);
+  });
+
+  it('uses only the first frame of native multiframe data', () => {
+    const px = extractPixels(
+      fixture([
+        [0x0028, 0x0008, 'IS', '2'],
+        [0x7fe0, 0x0010, 'OB', [0, 85, 170, 255, 42, 42, 42, 42]]
+      ])
+    );
+    expect(Array.from(px.gray)).toEqual([0, 85, 170, 255]);
+  });
+
+  it('explicitly rejects RLE-compressed pixels', () => {
+    expect(() => extractPixels(fixture([], '1.2.840.10008.1.2.5'))).toThrow(
+      /Transfer Syntax.*tidak didukung/i
+    );
+  });
+
+  it.each(['RGB', 'YBR_FULL', 'PALETTE COLOR'])(
+    'explicitly rejects %s color pixels',
+    (photometric) => {
+      expect(() =>
+        extractPixels(
+          fixture([
+            [0x0028, 0x0002, 'US', photometric === 'PALETTE COLOR' ? 1 : 3],
+            [0x0028, 0x0004, 'CS', photometric],
+            [0x7fe0, 0x0010, 'OB', new Uint8Array(photometric === 'PALETTE COLOR' ? 4 : 12)]
+          ])
+        )
+      ).toThrow(/Photometric.*tidak didukung/i);
+    }
+  );
+
+  it.each([1, 32])('explicitly rejects %s-bit allocation', (bits) => {
+    expect(() =>
+      extractPixels(
+        fixture([
+          [0x0028, 0x0100, 'US', bits],
+          [0x0028, 0x0101, 'US', bits],
+          [0x0028, 0x0102, 'US', bits - 1],
+          [0x7fe0, 0x0010, 'OW', new Uint8Array(bits === 1 ? 2 : 16)]
+        ])
+      )
+    ).toThrow(/Bits.*tidak didukung/i);
+  });
+
   it('mengekstrak piksel 8-bit + dimensi + photometric', () => {
     const px = extractPixels(buildDicom());
 

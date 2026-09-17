@@ -36,7 +36,7 @@
   }
 
   function tampilkanRumus() {
-    error = '';
+    hitung();
     const points: { kvp: number; value: number }[] = [];
     rows.forEach((r, i) => {
       const kvp = num(r.kvp);

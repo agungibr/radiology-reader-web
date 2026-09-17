@@ -80,10 +80,27 @@ function formatDa(raw: string): string {
   return /^\d{8}$/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d;
 }
 
+function validDa(raw: string): boolean {
+  if (!/^\d{8}$/.test(raw)) return false;
+  const year = Number(raw.slice(0, 4));
+  const month = Number(raw.slice(4, 6));
+  const day = Number(raw.slice(6, 8));
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return year > 0 && month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1];
+}
+
+function ageFromAs(raw: string): string {
+  const match = /^(\d{3})([DWMY])$/.exec(raw);
+  if (!match) return '';
+  const unitsPerYear: Record<string, number> = { D: 365, W: 52, M: 12, Y: 1 };
+  return String(Math.floor(Number(match[1]) / unitsPerYear[match[2]]));
+}
+
 function calcAge(birthRaw: string, studyRaw: string): string {
-  if (!/^\d{8}$/.test(birthRaw.trim()) || !/^\d{8}$/.test(studyRaw.trim())) return '';
   const b = birthRaw.trim();
   const s = studyRaw.trim();
+  if (!validDa(b) || !validDa(s)) return '';
   const age =
     Number(s.slice(0, 4)) - Number(b.slice(0, 4)) - (s.slice(4, 8) < b.slice(4, 8) ? 1 : 0);
   if (age < 0 || !Number.isFinite(age)) return '';
@@ -100,8 +117,7 @@ export function parseDicom(buffer: ArrayBuffer): DicomMetadata {
 
   const birthRaw = safeString(ds, 'x00100030');
   const studyRaw = safeString(ds, 'x00080020');
-  const ageDigits = safeString(ds, 'x00101010').replace(/\D/g, '');
-  const age = calcAge(birthRaw, studyRaw) || (ageDigits ? String(parseInt(ageDigits, 10)) : '');
+  const age = calcAge(birthRaw, studyRaw) || ageFromAs(safeString(ds, 'x00101010'));
 
   const expMs = firstFloat(ds, 'x00181150');
   const ma = firstFloat(ds, 'x00181151');
@@ -156,8 +172,31 @@ export function extractPixels(buffer: ArrayBuffer): PixelData {
 
   const width = uint16(ds, 'x00280011');
   const height = uint16(ds, 'x00280010');
-  const bitsAllocated = uint16(ds, 'x00280100') || 8;
+  const transferSyntax = safeString(ds, 'x00020010');
+  if (
+    !['1.2.840.10008.1.2', '1.2.840.10008.1.2.1', '1.2.840.10008.1.2.2'].includes(transferSyntax)
+  ) {
+    throw new Error('Transfer Syntax tidak didukung');
+  }
+  const littleEndian = transferSyntax !== '1.2.840.10008.1.2.2';
+  const bitsAllocated = uint16(ds, 'x00280100');
+  const bitsStored = uint16(ds, 'x00280101');
+  const highBit = uint16(ds, 'x00280102');
+  const representation = uint16(ds, 'x00280103');
+  if (
+    ![8, 16].includes(bitsAllocated) ||
+    bitsStored < 1 ||
+    bitsStored > bitsAllocated ||
+    highBit < bitsStored - 1 ||
+    highBit >= bitsAllocated ||
+    ![0, 1].includes(representation)
+  ) {
+    throw new Error('Bits piksel tidak didukung');
+  }
   const photometric = safeString(ds, 'x00280004').toUpperCase();
+  if (!['MONOCHROME1', 'MONOCHROME2'].includes(photometric) || uint16(ds, 'x00280002') !== 1) {
+    throw new Error('Photometric Interpretation tidak didukung');
+  }
   const invert = photometric === 'MONOCHROME1';
 
   const element = (ds.elements as Record<string, { dataOffset: number; length: number }>)[
@@ -167,12 +206,30 @@ export function extractPixels(buffer: ArrayBuffer): PixelData {
   if (width <= 0 || height <= 0) throw new Error('Dimensi citra tidak valid');
 
   const count = width * height;
+  const bytesPerPixel = bitsAllocated / 8;
+  const byteLength = count * bytesPerPixel;
+  if (element.length < byteLength || element.dataOffset + byteLength > byteArray.byteLength) {
+    throw new Error('Data piksel tidak lengkap');
+  }
+  const view = new DataView(
+    byteArray.buffer,
+    byteArray.byteOffset + element.dataOffset,
+    byteLength
+  );
+  const shift = highBit + 1 - bitsStored;
+  const range = 2 ** bitsStored;
+  const mask = range - 1;
+  const slope = firstFloat(ds, 'x00281053') ?? 1;
+  const intercept = firstFloat(ds, 'x00281052') ?? 0;
+  if (!Number.isFinite(slope) || !Number.isFinite(intercept) || slope === 0) {
+    throw new Error('Rescale piksel tidak valid');
+  }
   const raw = new Float64Array(count);
-  if (bitsAllocated <= 8) {
-    for (let i = 0; i < count; i++) raw[i] = byteArray[element.dataOffset + i] ?? 0;
-  } else {
-    const view = new DataView(byteArray.buffer, byteArray.byteOffset + element.dataOffset);
-    for (let i = 0; i < count; i++) raw[i] = view.getUint16(i * 2, true);
+  for (let i = 0; i < count; i++) {
+    const word = bitsAllocated === 8 ? view.getUint8(i) : view.getUint16(i * 2, littleEndian);
+    let value = (word >>> shift) & mask;
+    if (representation === 1 && value >= range / 2) value -= range;
+    raw[i] = value * slope + intercept;
   }
 
   // Windowing jika tag tersedia dan valid
@@ -200,7 +257,6 @@ export function extractPixels(buffer: ArrayBuffer): PixelData {
   }
   return { gray, width, height, invert };
 }
-
 /** Grayscale → RGBA untuk `putImageData`. `invert` untuk MONOCHROME1. */
 export function renderGrayscale(
   gray: Uint8Array,

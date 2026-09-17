@@ -24,20 +24,15 @@
 </div>
 
 {#key file?.name ?? 'tanpa-file'}
-  {#if showDap}
-    <div class="mt-4 grid items-start gap-4 lg:grid-cols-2">
-      <ExposureForm {file} bind:coeffA bind:coeffB />
-      <div class="grid content-start gap-4">
+  <div class={`mt-4 grid items-start gap-4 ${showDap ? 'lg:grid-cols-2' : ''}`}>
+    <ExposureForm {file} bind:coeffA bind:coeffB />
+    <div class="grid content-start gap-4">
+      {#if showDap}
         <DapForm {file} />
-        <DoseEstimateCard {file} />
-      </div>
-    </div>
-  {:else}
-    <div class="mt-4 grid items-start gap-4">
-      <ExposureForm {file} bind:coeffA bind:coeffB />
+      {/if}
       <DoseEstimateCard {file} />
     </div>
-  {/if}
+  </div>
   <div class="mt-4">
     <CalibrationTable
       onFit={(a, b) => {
