@@ -115,7 +115,7 @@
       <p class="mt-1 text-xs text-slate-500">IAK SID (mGy)</p>
       <p class="font-mono font-bold">{result.iakSidMgy.toFixed(6)} mGy</p>
       <p class="mt-1 text-xs text-slate-500">DAP (mGy·cm²)</p>
-      <p class="font-mono text-2xl font-bold text-amber-600">
+      <p class="tnum font-mono text-2xl font-bold text-cyan-800">
         {result.dapMgyCm2.toFixed(4)} mGy·cm²
       </p>
     </div>

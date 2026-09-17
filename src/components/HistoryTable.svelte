@@ -31,8 +31,8 @@
   } = $props();
 
   const display: ExportRow[] = $derived(
-    rows.map((r, i) =>
-      toExportRow({
+    rows.map((r, i) => ({
+      ...toExportRow({
         no: rows.length - i,
         patientId: r.patientId,
         patientName: r.patientName,
@@ -49,15 +49,23 @@
         dapMgyCm2: r.dapMgyCm2,
         drlLimitText: r.drlLimitText,
         drlStatus: r.drlStatus
-      })
-    )
+      }),
+      // Tampilan tabel dibulatkan; file export tetap presisi penuh.
+      mAs: fmt(r.mas),
+      'INAK (mGy)': fmt(r.inakMgy),
+      'ESAK (mGy)': fmt(r.esakMgy)
+    }))
   );
+
+  function fmt(v: number): string {
+    return Number.isFinite(v) ? v.toFixed(4) : '';
+  }
 
   const columns: string[] = $derived(display.length > 0 ? Object.keys(display[0] as object) : []);
 </script>
 
 <div class="panel slim-scroll overflow-auto">
-  <table class="w-full text-xs">
+  <table class="tnum w-full font-mono text-xs">
     <thead class="sticky top-0 bg-slate-100">
       <tr>
         {#each columns as c (c)}

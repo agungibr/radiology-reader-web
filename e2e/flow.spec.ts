@@ -27,6 +27,9 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
   await expect(page.getByText('0.242103 mGy').first()).toBeVisible();
   await expect(page.getByText('Above DRL').first()).toBeVisible();
   // Preview tanpa D1: hasil tetap tampil + peringatan penyimpanan
+  await page.waitForResponse(
+    (r) => r.url().includes('/api/history') && r.request().method() === 'POST'
+  );
   await expect(page.getByText(/tidak tersimpan/)).toBeVisible();
 
   // 4. Toggle DAP (hidden by default seperti desktop)
