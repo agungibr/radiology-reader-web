@@ -94,4 +94,7 @@
       {/each}
     </tbody>
   </table>
+  {#if display.length === 0}
+    <p class="p-4 text-center text-sm text-slate-500">Belum ada data history.</p>
+  {/if}
 </div>

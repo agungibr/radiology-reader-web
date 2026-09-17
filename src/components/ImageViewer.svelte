@@ -43,10 +43,7 @@
   }
 
   function resetView() {
-    zoom = 1;
-    offsetX = 0;
-    offsetY = 0;
-    draw();
+    fit();
   }
 
   function zoomBy(factor: number) {
@@ -100,32 +97,29 @@
 
   $effect(() => {
     // draw() membaca `image`, jadi efek jalan ulang tiap gambar berganti.
-    zoom = 1;
-    offsetX = 0;
-    offsetY = 0;
-    draw();
+    // Seperti MicroDicom: fit-to-window saat gambar dibuka.
+    if (image) fit();
+    else draw();
   });
 </script>
 
-<div class="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Alat viewport">
-  <button type="button" class="toolbtn" onclick={() => zoomBy(1 / 1.15)} aria-label="Perkecil">
-    −
-  </button>
-  <span class="tnum w-14 text-center font-mono text-xs text-slate-200"
-    >{Math.round(zoom * 100)}%</span
-  >
-  <button type="button" class="toolbtn" onclick={() => zoomBy(1.15)} aria-label="Perbesar">+</button
-  >
-  <span class="mx-1 h-5 w-px bg-slate-700" aria-hidden="true"></span>
-  <button type="button" class="toolbtn" onclick={fit}>Fit</button>
-  <button type="button" class="toolbtn" onclick={oneToOne}>1:1</button>
-  <button type="button" class="toolbtn" onclick={resetView}>Reset</button>
-  {#if image}
-    <span class="tnum ml-auto font-mono text-xs text-slate-400">
-      {image.width} × {image.height}
-    </span>
-  {/if}
-</div>
+{#if image}
+  <div class="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Alat viewport">
+    <button type="button" class="toolbtn" onclick={() => zoomBy(1 / 1.15)} aria-label="Perkecil">
+      −
+    </button>
+    <span class="tnum w-14 text-center font-mono text-xs text-slate-200"
+      >{Math.round(zoom * 100)}%</span
+    >
+    <button type="button" class="toolbtn" onclick={() => zoomBy(1.15)} aria-label="Perbesar"
+      >+</button
+    >
+    <span class="mx-1 h-5 w-px bg-slate-700" aria-hidden="true"></span>
+    <button type="button" class="toolbtn" onclick={fit}>Fit</button>
+    <button type="button" class="toolbtn" onclick={oneToOne}>1:1</button>
+    <button type="button" class="toolbtn" onclick={resetView}>Reset</button>
+  </div>
+{/if}
 <div
   bind:this={frame}
   class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded border border-slate-800 bg-black"

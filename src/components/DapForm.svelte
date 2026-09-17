@@ -61,7 +61,7 @@
 <section class="panel p-4" aria-label="Perhitungan DAP">
   <h2 class="text-sm font-bold">Parameter Geometri &amp; Koefisien</h2>
 
-  <div class="mt-2 grid grid-cols-[130px_1fr] items-center gap-2 text-sm">
+  <div class="mt-2 grid max-w-xl grid-cols-[130px_1fr] items-center gap-2 text-sm">
     <label for="dap-kvp">kVp</label>
     <input
       id="dap-kvp"

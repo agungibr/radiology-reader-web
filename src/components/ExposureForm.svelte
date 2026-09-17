@@ -92,7 +92,7 @@
   <h2 class="text-sm font-bold">Parameter Eksposur</h2>
   <p class="mb-2 text-xs text-slate-500">Otomatis dari DICOM atau isi manual.</p>
 
-  <div class="grid grid-cols-[110px_1fr_auto] items-center gap-2 text-sm">
+  <div class="grid max-w-xl grid-cols-[110px_1fr_auto] items-center gap-2 text-sm">
     <label for="kvp">kVp</label>
     <input id="kvp" type="number" class="border px-2 py-1" bind:value={kvp} min="0" step="0.1" />
     <span class="text-xs text-green-700">{meta?.kvp != null ? 'DICOM' : ''}</span>
