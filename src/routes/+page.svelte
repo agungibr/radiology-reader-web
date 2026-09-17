@@ -28,10 +28,10 @@
       }
     }
     files = [...files];
-    if (files.length > 0) select(Math.max(0, files.length - 1));
+    if (files.length > 0) await select(Math.max(0, files.length - 1));
   }
 
-  function select(i: number) {
+  async function select(i: number) {
     selected = i;
     error = '';
     const f = files[i];
@@ -52,14 +52,14 @@
         activeFile.set(entry);
         currentTags = listTags(f.buffer);
       } else {
-        void loadRaster(f).then((entry) => {
-          if (files[selected] === f) {
-            activeFile.set(entry);
-            currentTags = [];
-          }
-        });
+        const entry = await loadRaster(f);
+        if (files[selected] === f) {
+          activeFile.set(entry);
+          currentTags = [];
+        }
       }
     } catch (e) {
+      if (files[selected] !== f) return;
       activeFile.set(null);
       currentTags = [];
       error = e instanceof Error ? e.message : `Gagal memuat ${f.name}`;
