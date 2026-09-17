@@ -16,6 +16,14 @@
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
+  let query = $state('');
+  let zoomPct = $state(100);
+
+  const visible = $derived(
+    files
+      .map((f, i) => ({ f, i }))
+      .filter(({ f }) => f.name.toLowerCase().includes(query.trim().toLowerCase()))
+  );
 
   async function addFiles(list: FileList | File[]) {
     error = '';
@@ -29,6 +37,17 @@
     }
     files = [...files];
     if (files.length > 0) await select(Math.max(0, files.length - 1));
+  }
+
+  async function removeFile(i: number) {
+    files = files.filter((_, j) => j !== i);
+    if (files.length === 0) {
+      selected = 0;
+      activeFile.set(null);
+      currentTags = [];
+      return;
+    }
+    await select(Math.min(selected, files.length - 1));
   }
 
   async function select(i: number) {
@@ -88,6 +107,8 @@
   let current = $state<ActiveFile | null>(null);
   activeFile.subscribe((v) => (current = v));
 
+  const meta = $derived(current?.metadata ?? null);
+
   function onDrop(e: DragEvent) {
     e.preventDefault();
     dragging = false;
@@ -95,13 +116,16 @@
   }
 </script>
 
-<h1 class="text-lg font-bold">Viewer</h1>
-
-<div class="mt-4 grid gap-4 lg:grid-cols-[220px_1fr_300px]">
-  <section class="border bg-white p-4" aria-label="Daftar file">
-    <h2 class="mb-2 text-sm font-bold">File</h2>
-    <label class="block cursor-pointer border bg-gray-50 p-2 text-center text-sm hover:bg-gray-100">
-      📂 Buka File
+<div class="grid gap-3 p-4 lg:grid-cols-[264px_minmax(0,1fr)_320px]">
+  <h1 class="sr-only">Viewer</h1>
+  <!-- Browser ala MicroDicom -->
+  <section class="panel content-start p-3" aria-label="Browser file">
+    <h2 class="panel-title">Browser</h2>
+    <label
+      class="btn-primary mt-2 block cursor-pointer px-3 py-1.5 text-center text-sm"
+      aria-label="Buka file"
+    >
+      Buka File
       <input
         type="file"
         class="hidden"
@@ -110,44 +134,94 @@
         onchange={(e) => e.currentTarget.files && void addFiles(e.currentTarget.files)}
       />
     </label>
-    <ul class="mt-2 max-h-72 overflow-auto text-sm">
-      {#each files as f, i (f.name + i)}
-        <li>
+    <input
+      type="search"
+      class="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+      placeholder="Cari file…"
+      aria-label="Cari file"
+      bind:value={query}
+    />
+    <ul class="slim-scroll mt-2 max-h-72 overflow-auto text-sm">
+      {#each visible as { f, i } (f.name + i)}
+        <li class="group flex items-center gap-1">
           <button
             type="button"
-            class={`w-full truncate p-1 text-left hover:bg-gray-100 ${i === selected ? 'bg-blue-600 text-white' : ''}`}
-            onclick={() => select(i)}
+            class={`w-full truncate rounded p-1.5 text-left transition-colors ${i === selected ? 'bg-cyan-700 font-semibold text-white' : 'hover:bg-slate-100'}`}
+            onclick={() => void select(i)}
           >
             {f.name}
+          </button>
+          <button
+            type="button"
+            class="rounded px-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 hover:text-red-700 focus-visible:opacity-100"
+            aria-label={`Hapus ${f.name}`}
+            onclick={() => void removeFile(i)}
+          >
+            ✕
           </button>
         </li>
       {/each}
     </ul>
     {#if files.length === 0}
-      <p class="mt-2 text-xs text-gray-500">Seret file ke area viewer atau klik Buka File.</p>
+      <p class="mt-2 text-xs text-slate-500">Seret file ke viewport atau klik Buka File.</p>
+    {:else}
+      <p class="tnum mt-2 font-mono text-[11px] text-slate-500">{files.length} file</p>
     {/if}
   </section>
 
+  <!-- Viewport -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
+    class={`rounded-lg border bg-slate-950 p-3 transition-colors ${dragging ? 'border-cyan-400' : 'border-slate-800'}`}
     ondragover={(e) => {
       e.preventDefault();
       dragging = true;
     }}
     ondragleave={() => (dragging = false)}
     ondrop={onDrop}
-    class={dragging ? 'outline outline-blue-500' : ''}
   >
-    <ImageViewer image={current?.image ?? null} />
+    <ImageViewer image={current?.image ?? null} onZoom={(p) => (zoomPct = p)}>
+      {#snippet overlay()}
+        {#if current}
+          <span class="absolute top-2 left-2">
+            {meta ? `${meta.patientName || '—'} · ${meta.patientId || '—'}` : current.name}
+          </span>
+          {#if meta}
+            <span class="absolute top-2 right-2 text-right">
+              {meta.studyDescription || '—'}<br />{meta.studyDate || ''}
+            </span>
+            <span class="absolute bottom-2 left-2">
+              Zoom {zoomPct}% · {current.image.width} × {current.image.height}
+            </span>
+            <span class="absolute right-2 bottom-2 text-right">
+              {meta.modality || ''}{meta.viewPosition ? ` · ${meta.viewPosition}` : ''}
+            </span>
+          {:else}
+            <span class="absolute bottom-2 left-2">
+              Zoom {zoomPct}% · {current.image.width} × {current.image.height}
+            </span>
+          {/if}
+        {/if}
+      {/snippet}
+    </ImageViewer>
     {#if error}
-      <p role="alert" class="mt-2 border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+      <p
+        role="alert"
+        class="mt-2 rounded border border-red-800 bg-red-950 p-2 text-sm text-red-200"
+      >
         {error}
       </p>
     {/if}
+    <p class="tnum mt-2 font-mono text-[11px] text-slate-500">
+      {current
+        ? `${current.name} · ${current.kind === 'dicom' ? `DICOM · ${currentTags.length} tag` : 'gambar'}`
+        : 'Siap'}
+    </p>
   </div>
 
-  <div class="grid content-start gap-4">
-    <PatientCard metadata={current?.metadata ?? null} />
+  <!-- Info -->
+  <div class="grid content-start gap-3">
+    <PatientCard metadata={meta} />
     <TagsTable tags={currentTags} />
   </div>
 </div>

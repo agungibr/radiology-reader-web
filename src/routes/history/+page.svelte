@@ -57,55 +57,56 @@
   });
 </script>
 
-<h1 class="text-lg font-bold">History Perhitungan INAK / ESAK</h1>
-<p class="text-sm text-gray-500">{total} data</p>
+<div class="p-4">
+  <h1 class="text-lg font-bold tracking-tight">History Perhitungan INAK / ESAK</h1>
+  <p class="tnum text-sm text-slate-500">{total} data</p>
 
-<div class="mt-2 flex flex-wrap gap-2 text-sm">
-  <a
-    class="border bg-emerald-600 px-3 py-1 font-bold text-white"
-    href={resolve('/api/history/export?format=xlsx')}
-  >
-    📊 Simpan Excel (.xlsx)
-  </a>
-  <a class="border px-3 py-1" href={resolve('/api/history/export?format=csv')}>Simpan CSV</a>
-  <button
-    type="button"
-    class="border border-purple-600 px-3 py-1 text-purple-700"
-    disabled={busy || rows.length === 0}
-    onclick={hapusSemua}
-  >
-    ✕ Hapus Semua
-  </button>
+  <div class="mt-2 flex flex-wrap gap-2 text-sm">
+    <a class="btn-primary px-3 py-1" href={resolve('/api/history/export?format=xlsx')}>
+      Simpan Excel (.xlsx)
+    </a>
+    <a class="toolbtn" href={resolve('/api/history/export?format=csv')}>Simpan CSV</a>
+    <button
+      type="button"
+      class="toolbtn border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50"
+      disabled={busy || rows.length === 0}
+      onclick={hapusSemua}
+    >
+      Hapus Semua
+    </button>
+  </div>
+
+  {#if error}
+    <p role="alert" class="mt-2 border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+      {error}
+    </p>
+  {/if}
+
+  <div class="mt-2">
+    <HistoryTable {rows} onDelete={hapus} deleting={busy} />
+  </div>
+
+  <div class="mt-2 flex items-center gap-2 text-sm">
+    <button
+      type="button"
+      class="border px-2 py-1 disabled:opacity-50"
+      disabled={page <= 1}
+      onclick={() => (page -= 1)}
+    >
+      ← Sebelumnya
+    </button>
+    <span>Halaman {page} / {pages}</span>
+    <button
+      type="button"
+      class="border px-2 py-1 disabled:opacity-50"
+      disabled={page >= pages}
+      onclick={() => (page += 1)}
+    >
+      Berikutnya →
+    </button>
+  </div>
+
+  {#if loading}
+    <p class="mt-2 text-sm text-slate-500">Memuat…</p>
+  {/if}
 </div>
-
-{#if error}
-  <p role="alert" class="mt-2 border border-red-300 bg-red-50 p-2 text-sm text-red-700">{error}</p>
-{/if}
-
-<div class="mt-2">
-  <HistoryTable {rows} onDelete={hapus} deleting={busy} />
-</div>
-
-<div class="mt-2 flex items-center gap-2 text-sm">
-  <button
-    type="button"
-    class="border px-2 py-1 disabled:opacity-50"
-    disabled={page <= 1}
-    onclick={() => (page -= 1)}
-  >
-    ← Sebelumnya
-  </button>
-  <span>Halaman {page} / {pages}</span>
-  <button
-    type="button"
-    class="border px-2 py-1 disabled:opacity-50"
-    disabled={page >= pages}
-    onclick={() => (page += 1)}
-  >
-    Berikutnya →
-  </button>
-</div>
-
-{#if loading}
-  <p class="mt-2 text-sm text-gray-500">Memuat…</p>
-{/if}

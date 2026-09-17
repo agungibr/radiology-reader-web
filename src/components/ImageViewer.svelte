@@ -1,13 +1,18 @@
 <script lang="ts">
   let {
     image,
-    alt = 'Citra radiologi'
+    alt = 'Citra radiologi',
+    onZoom,
+    overlay
   }: {
     image: { data: Uint8ClampedArray; width: number; height: number } | null;
     alt?: string;
+    onZoom?: (percent: number) => void;
+    overlay?: import('svelte').Snippet;
   } = $props();
 
   let canvas: HTMLCanvasElement | null = $state(null);
+  let frame: HTMLDivElement | null = $state(null);
   let zoom = $state(1);
   let offsetX = $state(0);
   let offsetY = $state(0);
@@ -19,6 +24,7 @@
   const MAX_ZOOM = 8;
 
   function draw() {
+    onZoom?.(Math.round(zoom * 100));
     if (!canvas || !image) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -45,6 +51,25 @@
 
   function zoomBy(factor: number) {
     zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+    draw();
+  }
+
+  function fit() {
+    if (!frame || !image) return;
+    const r = frame.getBoundingClientRect();
+    zoom = Math.min(
+      MAX_ZOOM,
+      Math.max(MIN_ZOOM, Math.min((r.width - 24) / image.width, (r.height - 24) / image.height))
+    );
+    offsetX = 0;
+    offsetY = 0;
+    draw();
+  }
+
+  function oneToOne() {
+    zoom = 1;
+    offsetX = 0;
+    offsetY = 0;
     draw();
   }
 
@@ -82,37 +107,50 @@
   });
 </script>
 
-<div>
-  <div class="mb-2 flex items-center gap-2 text-sm">
-    <span class="text-gray-500">Zoom:</span>
-    <button type="button" class="border px-2 py-0.5" onclick={() => zoomBy(1 / 1.15)}>−</button>
-    <span class="w-12 text-center font-mono">{Math.round(zoom * 100)}%</span>
-    <button type="button" class="border px-2 py-0.5" onclick={() => zoomBy(1.15)}>+</button>
-    <button type="button" class="border px-2 py-0.5" onclick={resetView}>Reset</button>
-    {#if image}
-      <span class="ml-auto font-mono text-gray-600">
-        {image.width} × {image.height}
-      </span>
-    {/if}
-  </div>
-  <div
-    class="flex items-center justify-center overflow-hidden border bg-black"
-    style="min-height: 320px"
+<div class="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Alat viewport">
+  <button type="button" class="toolbtn" onclick={() => zoomBy(1 / 1.15)} aria-label="Perkecil">
+    −
+  </button>
+  <span class="tnum w-14 text-center font-mono text-xs text-slate-200"
+    >{Math.round(zoom * 100)}%</span
   >
-    {#if image}
-      <figure class="m-0">
-        <figcaption class="sr-only">{alt} — {image.width} × {image.height}</figcaption>
-        <canvas
-          bind:this={canvas}
-          class="max-h-[60vh] cursor-grab"
-          onwheel={onWheel}
-          onpointerdown={onPointerDown}
-          onpointermove={onPointerMove}
-          onpointerup={onPointerUp}
-        ></canvas>
-      </figure>
-    {:else}
-      <p class="text-sm text-gray-400">Belum ada gambar. Unggah file DICOM atau gambar.</p>
-    {/if}
-  </div>
+  <button type="button" class="toolbtn" onclick={() => zoomBy(1.15)} aria-label="Perbesar">+</button
+  >
+  <span class="mx-1 h-5 w-px bg-slate-700" aria-hidden="true"></span>
+  <button type="button" class="toolbtn" onclick={fit}>Fit</button>
+  <button type="button" class="toolbtn" onclick={oneToOne}>1:1</button>
+  <button type="button" class="toolbtn" onclick={resetView}>Reset</button>
+  {#if image}
+    <span class="tnum ml-auto font-mono text-xs text-slate-400">
+      {image.width} × {image.height}
+    </span>
+  {/if}
+</div>
+<div
+  bind:this={frame}
+  class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded border border-slate-800 bg-black"
+  style="min-height: 320px; max-height: calc(100dvh - 16rem);"
+>
+  {#if overlay}
+    <div class="viewport-overlay pointer-events-none absolute inset-0 z-10 p-2">
+      {@render overlay()}
+    </div>
+  {/if}
+  {#if image}
+    <figure class="m-0 p-3">
+      <figcaption class="sr-only">{alt} — {image.width} × {image.height}</figcaption>
+      <canvas
+        bind:this={canvas}
+        class="cursor-grab"
+        onwheel={onWheel}
+        onpointerdown={onPointerDown}
+        onpointermove={onPointerMove}
+        onpointerup={onPointerUp}
+      ></canvas>
+    </figure>
+  {:else}
+    <p class="p-6 text-center text-sm text-slate-500">
+      Belum ada gambar.<br />Buka file DICOM atau gambar dari panel Browser.
+    </p>
+  {/if}
 </div>

@@ -10,7 +10,9 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
 
   // 1. Unggah fixture
   await page.locator('input[type="file"]').setInputFiles(FIXTURE);
-  await expect(page.getByText('sample-chest-pa.dcm')).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'sample-chest-pa.dcm', exact: true })
+  ).toBeVisible();
   await expect(page.getByText('TEST001').first()).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.getByText(/Tag DICOM \(\d+\)/)).toBeVisible();
