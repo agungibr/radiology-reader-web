@@ -57,18 +57,18 @@
   });
 </script>
 
-<div class="p-4">
-  <h1 class="text-lg font-bold tracking-tight">History Perhitungan INAK / ESAK</h1>
-  <p class="tnum text-sm text-slate-400">{total} data</p>
+<div class="mx-auto max-w-6xl px-6 py-8">
+  <h1 class="font-serif text-2xl font-semibold tracking-tight">History Perhitungan INAK / ESAK</h1>
+  <p class="tnum text-sm text-[#787774]">{total} data</p>
 
-  <div class="mt-2 flex flex-wrap gap-2 text-sm">
-    <a class="btn-primary px-3 py-1" href={resolve('/api/history/export?format=xlsx')}>
+  <div class="mt-4 flex flex-wrap gap-2 text-sm">
+    <a class="btn-primary px-3 py-1.5" href={resolve('/api/history/export?format=xlsx')}>
       Simpan Excel (.xlsx)
     </a>
     <a class="toolbtn" href={resolve('/api/history/export?format=csv')}>Simpan CSV</a>
     <button
       type="button"
-      class="toolbtn border-red-800 text-red-300 hover:border-red-700 hover:bg-red-950"
+      class="toolbtn hover:bg-[#FDEBEC] hover:text-[#9F2F2D]"
       disabled={busy || rows.length === 0}
       onclick={hapusSemua}
     >
@@ -77,7 +77,10 @@
   </div>
 
   {#if error}
-    <p role="alert" class="mt-2 rounded border border-red-800 bg-red-950 p-2 text-sm text-red-200">
+    <p
+      role="alert"
+      class="mt-2 rounded-[6px] border border-[#EAEAEA] bg-[#FDEBEC] p-2 text-sm text-[#9F2F2D]"
+    >
       {error}
     </p>
   {/if}
