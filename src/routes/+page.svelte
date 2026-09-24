@@ -116,7 +116,7 @@
   }
 </script>
 
-<div class="grid gap-3 p-4 lg:grid-cols-[264px_minmax(0,1fr)_320px]">
+<div class="mx-auto grid max-w-6xl gap-4 px-6 py-8 lg:grid-cols-[264px_minmax(0,1fr)_320px]">
   <h1 class="sr-only">Viewer</h1>
   <!-- Browser ala MicroDicom -->
   <section class="panel content-start p-3" aria-label="Browser file">
@@ -136,7 +136,7 @@
     </label>
     <input
       type="search"
-      class="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+      class="mt-2 w-full rounded-[6px] border border-[#EAEAEA] bg-white px-2 py-1 text-sm"
       placeholder="Cari file…"
       aria-label="Cari file"
       bind:value={query}
@@ -146,14 +146,14 @@
         <li class="group flex items-center gap-1">
           <button
             type="button"
-            class={`w-full truncate rounded p-1.5 text-left transition-colors ${i === selected ? 'bg-cyan-700 font-semibold text-white' : 'hover:bg-slate-800'}`}
+            class={`w-full truncate rounded-[6px] p-1.5 text-left transition-colors ${i === selected ? 'bg-[#111111] font-semibold text-white' : 'hover:bg-[#F7F6F3]'}`}
             onclick={() => void select(i)}
           >
             {f.name}
           </button>
           <button
             type="button"
-            class="rounded px-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-950 hover:text-red-300 focus-visible:opacity-100"
+            class="rounded px-1 text-[#787774] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#FDEBEC] hover:text-[#9F2F2D] focus-visible:opacity-100"
             aria-label={`Hapus ${f.name}`}
             onclick={() => void removeFile(i)}
           >
@@ -163,16 +163,16 @@
       {/each}
     </ul>
     {#if files.length === 0}
-      <p class="mt-2 text-xs text-slate-400">Seret file ke viewport atau klik Buka File.</p>
+      <p class="mt-2 text-xs text-[#787774]">Seret file ke viewport atau klik Buka File.</p>
     {:else}
-      <p class="tnum mt-2 font-mono text-[11px] text-slate-400">{files.length} file</p>
+      <p class="tnum mt-2 font-mono text-[11px] text-[#787774]">{files.length} file</p>
     {/if}
   </section>
 
   <!-- Viewport -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class={`rounded-lg border border-slate-800 bg-slate-900 p-3 transition-colors ${dragging ? 'border-cyan-400' : ''}`}
+    class={`rounded-[12px] border border-[#EAEAEA] bg-white p-4 transition-colors ${dragging ? 'border-[#111111]' : ''}`}
     ondragover={(e) => {
       e.preventDefault();
       dragging = true;
@@ -207,12 +207,12 @@
     {#if error}
       <p
         role="alert"
-        class="mt-2 rounded border border-red-800 bg-red-950 p-2 text-sm text-red-200"
+        class="mt-2 rounded-[6px] border border-[#EAEAEA] bg-[#FDEBEC] p-2 text-sm text-[#9F2F2D]"
       >
         {error}
       </p>
     {/if}
-    <p class="tnum mt-2 font-mono text-[11px] text-slate-400">
+    <p class="tnum mt-2 font-mono text-[11px] text-[#787774]">
       {current
         ? `${current.name} · ${current.kind === 'dicom' ? `DICOM · ${currentTags.length} tag` : 'gambar'}`
         : 'Siap'}

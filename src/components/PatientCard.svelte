@@ -16,16 +16,16 @@
   ];
 </script>
 
-<section class="panel p-4" aria-label="Data pasien">
-  <h2 class="mb-2 text-sm font-bold">Data Pasien</h2>
+<section class="panel p-6" aria-label="Data pasien">
+  <h2 class="panel-title mb-3">Data Pasien</h2>
   {#if metadata}
-    <dl class="grid grid-cols-[110px_1fr] gap-y-1 text-sm">
+    <dl class="grid grid-cols-[110px_1fr] gap-y-1.5 text-sm">
       {#each rows as r (r.label)}
-        <dt class="text-slate-400">{r.label}</dt>
+        <dt class="text-[#787774]">{r.label}</dt>
         <dd>{r.get(metadata)}</dd>
       {/each}
     </dl>
   {:else}
-    <p class="text-sm text-slate-400">Tidak ada metadata DICOM. Isi manual di halaman Dosimetri.</p>
+    <p class="text-sm text-[#787774]">Tidak ada metadata DICOM. Isi manual di halaman Dosimetri.</p>
   {/if}
 </section>
