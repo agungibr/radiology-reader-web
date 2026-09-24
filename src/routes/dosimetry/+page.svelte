@@ -17,9 +17,9 @@
   let showDap = $state(false);
 </script>
 
-<div class="mx-auto max-w-7xl p-4">
+<div class="mx-auto max-w-6xl px-6 py-8">
   <div class="flex flex-wrap items-center gap-3">
-    <h1 class="text-lg font-bold tracking-tight">Dosimetri</h1>
+    <h1 class="font-serif text-2xl font-semibold tracking-tight">Dosimetri</h1>
     <button
       type="button"
       class="toolbtn"
@@ -29,7 +29,7 @@
       {showDap ? 'Sembunyikan DAP' : 'Tampilkan DAP'}
     </button>
     {#if file}
-      <span class="tnum ml-auto hidden font-mono text-xs text-slate-400 sm:inline">
+      <span class="tnum ml-auto hidden font-mono text-xs text-[#787774] sm:inline">
         {file.name}
       </span>
     {/if}
@@ -59,7 +59,7 @@
   {/key}
 
   {#if !file}
-    <p class="panel mt-4 border-amber-800 bg-amber-950 p-3 text-sm text-amber-200">
+    <p class="panel mt-4 border-[#EAEAEA] bg-[#FBF3DB] p-4 text-sm text-[#956400]">
       Belum ada file aktif. Buka gambar dulu di halaman Viewer agar parameter terisi otomatis — atau
       isi semua manual di atas.
     </p>

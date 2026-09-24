@@ -65,25 +65,25 @@
 </script>
 
 <div class="panel slim-scroll overflow-auto">
-  <table class="tnum w-full font-mono text-xs">
-    <thead class="sticky top-0 bg-slate-800">
-      <tr>
+  <table class="tnum w-full text-xs">
+    <thead class="sticky top-0 bg-[#F7F6F3]">
+      <tr class="border-b border-[#EAEAEA]">
         {#each columns as c (c)}
-          <th class="whitespace-nowrap p-1 text-left">{c}</th>
+          <th class="p-1.5 text-left font-sans font-semibold whitespace-nowrap">{c}</th>
         {/each}
-        <th class="p-1"></th>
+        <th class="p-1.5"></th>
       </tr>
     </thead>
     <tbody>
       {#each display as row, i (rows[i]?.id)}
-        <tr class="border-t">
+        <tr class="border-b border-[#EAEAEA] last:border-0">
           {#each columns as c (c)}
-            <td class="whitespace-nowrap p-1">{row[c]}</td>
+            <td class="p-1.5 whitespace-nowrap">{row[c]}</td>
           {/each}
-          <td class="p-1">
+          <td class="p-1.5">
             <button
               type="button"
-              class="text-red-300 hover:underline disabled:opacity-50"
+              class="text-[#9F2F2D] hover:underline disabled:opacity-50"
               disabled={deleting}
               onclick={() => rows[i] && onDelete(rows[i].id)}
             >
@@ -95,6 +95,6 @@
     </tbody>
   </table>
   {#if display.length === 0}
-    <p class="p-4 text-center text-sm text-slate-400">Belum ada data history.</p>
+    <p class="p-6 text-center text-sm text-[#787774]">Belum ada data history.</p>
   {/if}
 </div>

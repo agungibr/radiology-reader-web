@@ -68,25 +68,25 @@
   }
 </script>
 
-<section class="panel p-4" aria-label="Data kalibrasi">
-  <h2 class="text-sm font-bold">Data Kalibrasi</h2>
-  <p class="mb-2 text-xs text-slate-400">
+<section class="panel p-6" aria-label="Data kalibrasi">
+  <h2 class="panel-title">Data Kalibrasi</h2>
+  <p class="mb-3 text-xs text-[#787774]">
     kVp &amp; mGy diisi manual. mAs default 20, bisa diubah.
   </p>
 
   <table class="w-full text-sm">
     <thead>
-      <tr class="bg-slate-800 text-left">
-        <th class="p-1">kVp</th>
-        <th class="p-1">mAs</th>
-        <th class="p-1">mGy</th>
-        <th class="p-1">µGy</th>
-        <th class="p-1">µGy/mAs</th>
+      <tr class="border-b border-[#EAEAEA] text-left">
+        <th class="p-1.5 text-xs font-semibold">kVp</th>
+        <th class="p-1.5 text-xs font-semibold">mAs</th>
+        <th class="p-1.5 text-xs font-semibold">mGy</th>
+        <th class="p-1.5 text-xs font-semibold">µGy</th>
+        <th class="p-1.5 text-xs font-semibold">µGy/mAs</th>
       </tr>
     </thead>
     <tbody>
       {#each rows as r, i (i)}
-        <tr class="border-t">
+        <tr class="border-b border-[#EAEAEA] last:border-0">
           <td class="p-1"
             ><input
               class="w-full border px-1"
@@ -128,12 +128,14 @@
   </div>
 
   {#if formula}
-    <p class="mt-2 rounded bg-slate-950 p-2 text-center font-mono font-bold text-cyan-100">
+    <p
+      class="mt-2 rounded-[6px] border border-[#EAEAEA] bg-[#F7F6F3] p-2 text-center font-mono font-bold text-[#111111]"
+    >
       {formula}
     </p>
-    <p class="text-center text-xs text-slate-400">{r2text} — koefisien a dan b diperbarui</p>
+    <p class="text-center text-xs text-[#787774]">{r2text} — koefisien a dan b diperbarui</p>
   {/if}
   {#if error}
-    <p role="alert" class="mt-2 text-sm text-red-300">{error}</p>
+    <p role="alert" class="mt-2 text-sm text-[#9F2F2D]">{error}</p>
   {/if}
 </section>

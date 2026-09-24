@@ -108,13 +108,13 @@
     <button type="button" class="toolbtn" onclick={() => zoomBy(1 / 1.15)} aria-label="Perkecil">
       −
     </button>
-    <span class="tnum w-14 text-center font-mono text-xs text-slate-200"
+    <span class="tnum w-14 text-center font-mono text-xs text-[#111111]"
       >{Math.round(zoom * 100)}%</span
     >
     <button type="button" class="toolbtn" onclick={() => zoomBy(1.15)} aria-label="Perbesar"
       >+</button
     >
-    <span class="mx-1 h-5 w-px bg-slate-700" aria-hidden="true"></span>
+    <span class="mx-1 h-5 w-px bg-[#EAEAEA]" aria-hidden="true"></span>
     <button type="button" class="toolbtn" onclick={fit}>Fit</button>
     <button type="button" class="toolbtn" onclick={oneToOne}>1:1</button>
     <button type="button" class="toolbtn" onclick={resetView}>Reset</button>
@@ -122,7 +122,7 @@
 {/if}
 <div
   bind:this={frame}
-  class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded border border-slate-800 bg-black"
+  class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded-[12px] border border-[#EAEAEA] bg-black"
   style="min-height: 320px; max-height: calc(100dvh - 16rem);"
 >
   {#if overlay}
@@ -143,7 +143,7 @@
       ></canvas>
     </figure>
   {:else}
-    <p class="p-6 text-center text-sm text-slate-500">
+    <p class="p-6 text-center text-sm text-[#787774]">
       Belum ada gambar.<br />Buka file DICOM atau gambar dari panel Browser.
     </p>
   {/if}

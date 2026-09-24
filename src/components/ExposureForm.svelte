@@ -88,18 +88,18 @@
   }
 </script>
 
-<section class="panel p-4" aria-label="Parameter eksposur">
-  <h2 class="text-sm font-bold">Parameter Eksposur</h2>
-  <p class="mb-2 text-xs text-slate-400">Otomatis dari DICOM atau isi manual.</p>
+<section class="panel p-6" aria-label="Parameter eksposur">
+  <h2 class="panel-title">Parameter Eksposur</h2>
+  <p class="mb-3 text-xs text-[#787774]">Otomatis dari DICOM atau isi manual.</p>
 
   <div class="grid max-w-xl grid-cols-[110px_1fr_auto] items-center gap-2 text-sm">
     <label for="kvp">kVp</label>
     <input id="kvp" type="number" class="border px-2 py-1" bind:value={kvp} min="0" step="0.1" />
-    <span class="text-xs text-emerald-400">{meta?.kvp != null ? 'DICOM' : ''}</span>
+    <span class="text-xs font-semibold text-[#346538]">{meta?.kvp != null ? 'DICOM' : ''}</span>
 
     <label for="ma">mA</label>
     <input id="ma" type="number" class="border px-2 py-1" bind:value={ma} min="0" step="0.01" />
-    <span class="text-xs text-emerald-400">{meta?.ma != null ? 'DICOM' : ''}</span>
+    <span class="text-xs font-semibold text-[#346538]">{meta?.ma != null ? 'DICOM' : ''}</span>
 
     <label for="time">Waktu (s)</label>
     <input
@@ -110,16 +110,18 @@
       min="0"
       step="0.0001"
     />
-    <span class="text-xs text-emerald-400">{meta?.exposureTimeS != null ? 'DICOM' : ''}</span>
+    <span class="text-xs font-semibold text-[#346538]"
+      >{meta?.exposureTimeS != null ? 'DICOM' : ''}</span
+    >
 
     <span>mAs (mA × s)</span>
-    <span class="tnum font-mono font-bold text-cyan-300"
+    <span class="tnum font-mono font-bold text-[#111111]"
       >{mas !== null ? `${mas.toFixed(4)} mAs` : '—'}</span
     >
     <span></span>
 
     <span>DAP DICOM</span>
-    <span class="tnum font-mono font-bold text-slate-900">
+    <span class="tnum font-mono font-bold text-[#111111]">
       {dap !== null ? `${dap.toFixed(4)} mGy·cm²` : '—'}
     </span>
     <span></span>
@@ -169,49 +171,49 @@
   </button>
 
   {#if result}
-    <div class="mt-3 border-t pt-2">
-      <p class="text-xs text-slate-400">INAK (Incident Air Kerma)</p>
+    <div class="mt-3 border-t border-[#EAEAEA] pt-3">
+      <p class="text-xs text-[#787774]">INAK (Incident Air Kerma)</p>
       <p class="tnum font-mono text-xl font-bold">{result.inak.toFixed(6)} mGy</p>
-      <p class="mt-1 text-xs text-slate-400">ESAK (Entrance Surface Air Kerma)</p>
-      <p class="tnum font-mono text-2xl font-bold text-cyan-300">{result.esak.toFixed(6)} mGy</p>
+      <p class="mt-1 text-xs text-[#787774]">ESAK (Entrance Surface Air Kerma)</p>
+      <p class="tnum font-mono text-2xl font-bold">{result.esak.toFixed(6)} mGy</p>
     </div>
   {/if}
 
   {#if drl}
-    <div class="mt-3 border-t pt-2 text-sm">
-      <p class="font-bold">
+    <div class="mt-3 border-t border-[#EAEAEA] pt-3 text-sm">
+      <p class="font-semibold">
         DRL Assessment — {drl.examination || '?'} ({drl.metric.toUpperCase() || '?'})
       </p>
       {#if drl.matched}
-        <p class="text-xs text-slate-400">View: {drl.view} | Kelompok: {drl.ageGroupLabel}</p>
+        <p class="text-xs text-[#787774]">View: {drl.view} | Kelompok: {drl.ageGroupLabel}</p>
         {#if drl.metric === 'inak_esak'}
           <div class="mt-1 flex items-center gap-2">
-            <span class="w-12 font-bold">INAK</span>
+            <span class="w-12 font-semibold">INAK</span>
             <span class="font-mono">{result?.inak.toFixed(6)} mGy</span>
-            <span class="text-xs text-slate-400">/ DRL {drl.drlInak} mGy</span>
+            <span class="text-xs text-[#787774]">/ DRL {drl.drlInak} mGy</span>
             <DrlBadge status={drl.inakStatus ?? ''} />
           </div>
           <div class="mt-1 flex items-center gap-2">
-            <span class="w-12 font-bold">ESAK</span>
+            <span class="w-12 font-semibold">ESAK</span>
             <span class="font-mono">{result?.esak.toFixed(6)} mGy</span>
-            <span class="text-xs text-slate-400">/ DRL {drl.drlEsak} mGy</span>
+            <span class="text-xs text-[#787774]">/ DRL {drl.drlEsak} mGy</span>
             <DrlBadge status={drl.esakStatus ?? ''} />
           </div>
         {:else}
           <div class="mt-1 flex items-center gap-2">
-            <span class="w-12 font-bold">DAP</span>
+            <span class="w-12 font-semibold">DAP</span>
             <span class="font-mono">{dap !== null ? `${dap.toFixed(4)} mGy·cm²` : '—'}</span>
-            <span class="text-xs text-slate-400">/ DRL {drl.drlDap} mGy·cm²</span>
+            <span class="text-xs text-[#787774]">/ DRL {drl.drlDap} mGy·cm²</span>
             <DrlBadge status={drl.dapStatus ?? ''} />
           </div>
         {/if}
       {:else}
-        <p class="text-xs text-slate-400 italic">{drl.message}</p>
+        <p class="text-xs text-[#787774] italic">{drl.message}</p>
       {/if}
     </div>
   {/if}
 
   {#if notice}
-    <p role="alert" class="mt-2 text-sm text-red-300">{notice}</p>
+    <p role="alert" class="mt-2 text-sm text-[#9F2F2D]">{notice}</p>
   {/if}
 </section>

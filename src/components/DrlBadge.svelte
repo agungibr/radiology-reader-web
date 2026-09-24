@@ -5,15 +5,17 @@
 
   const color = $derived(
     status === 'above'
-      ? 'bg-red-950 text-red-300 border-red-800'
+      ? 'bg-[#FDEBEC] text-[#9F2F2D] border-[#FDEBEC]'
       : status === 'equal'
-        ? 'bg-amber-950 text-amber-300 border-amber-800'
+        ? 'bg-[#FBF3DB] text-[#956400] border-[#FBF3DB]'
         : status === 'below'
-          ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
-          : 'bg-slate-800 text-slate-400 border-slate-700'
+          ? 'bg-[#EDF3EC] text-[#346538] border-[#EDF3EC]'
+          : 'bg-[#F7F6F3] text-[#787774] border-[#EAEAEA]'
   );
 </script>
 
-<span class={`inline-block border px-2 py-0.5 text-xs font-bold ${color}`}>
+<span
+  class={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase ${color}`}
+>
   {status ? statusLabel(status) : '—'}
 </span>
