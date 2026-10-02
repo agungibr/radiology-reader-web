@@ -1,14 +1,24 @@
 <script lang="ts">
   import ViewerIcon from '$components/ViewerIcon.svelte';
   import { applyWindow, defaultWindow, renderGrayscale } from '$lib/dicom';
+  import { measureDistance } from '$lib/measure';
 
-  /** Alat aktif tunggal ala PACS. Ruler diisi Tugas 6. */
+  /** Alat aktif tunggal ala PACS. */
   export type ViewerTool = 'window' | 'pan' | 'zoom' | 'ruler';
+
+  interface RulerMark {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    label: string;
+  }
 
   let {
     image,
     rawPixels = null,
     invertPixels = false,
+    pixelSpacingMm = null,
     alt = 'Citra radiologi',
     onZoom,
     onWindow,
@@ -17,6 +27,7 @@
     image: { data: Uint8ClampedArray; width: number; height: number } | null;
     rawPixels?: Float64Array | null;
     invertPixels?: boolean;
+    pixelSpacingMm?: number | null;
     alt?: string;
     onZoom?: (percent: number) => void;
     onWindow?: (ww: number, wl: number) => void;
@@ -41,6 +52,12 @@
   let winBaseL = 0;
   let prevImage: typeof image = null;
   let prevRaw: Float64Array | null = null;
+  let rulers: RulerMark[] = $state([]);
+  let rulerStart: { x: number; y: number } | null = $state(null);
+  let mousePx: { x: number; y: number } | null = $state(null);
+  let downPx: { x: number; y: number } | null = null;
+  let viewW = $state(0);
+  let viewH = $state(0);
 
   const MIN_ZOOM = 0.15;
   const MAX_ZOOM = 8;
@@ -62,6 +79,8 @@
     const putH = Math.max(1, Math.round(base.height * zoom));
     canvas.width = putW;
     canvas.height = putH;
+    viewW = putW;
+    viewH = putH;
     const off = document.createElement('canvas');
     off.width = base.width;
     off.height = base.height;
@@ -100,6 +119,9 @@
     resetWindow();
     fit();
     invertView = false;
+    rulers = [];
+    rulerStart = null;
+    mousePx = null;
   }
 
   function zoomBy(factor: number) {
@@ -124,6 +146,11 @@
     zoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15);
   }
 
+  /** Titik dalam piksel kanvas (CSS == piksel atribut, tanpa skala CSS). */
+  function canvasPoint(e: PointerEvent): { x: number; y: number } {
+    return { x: e.offsetX, y: e.offsetY };
+  }
+
   function onPointerDown(e: PointerEvent) {
     dragging = true;
     lastX = e.clientX;
@@ -131,6 +158,7 @@
     zoomBase = zoom;
     winBaseW = ww;
     winBaseL = wc;
+    downPx = tool === 'ruler' ? canvasPoint(e) : null;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
@@ -151,12 +179,34 @@
       wc = winBaseL - (e.clientY - lastY) * step;
       onWindow?.(ww, wc);
       draw();
+    } else if (tool === 'ruler') {
+      mousePx = canvasPoint(e);
     }
-    // ruler diisi Tugas 6.
   }
 
-  function onPointerUp() {
+  function onPointerUp(e: PointerEvent) {
+    if (tool === 'ruler' && downPx) {
+      const up = canvasPoint(e);
+      if (Math.hypot(up.x - downPx.x, up.y - downPx.y) < 5) rulerClick(up);
+    }
+    downPx = null;
     dragging = false;
+  }
+
+  /** Klik-klik: mulai garis, klik kedua menyimpan + memberi label. */
+  function rulerClick(p: { x: number; y: number }) {
+    if (!rulerStart) {
+      rulerStart = p;
+      return;
+    }
+    const dx = (p.x - rulerStart.x) / zoom;
+    const dy = (p.y - rulerStart.y) / zoom;
+    const m = measureDistance(dx, dy, pixelSpacingMm);
+    rulers = [
+      ...rulers,
+      { x1: rulerStart.x, y1: rulerStart.y, x2: p.x, y2: p.y, label: `${m.value} ${m.unit}` }
+    ];
+    rulerStart = null;
   }
 
   function cursor(): string {
@@ -173,6 +223,9 @@
       prevImage = image;
       prevRaw = rawPixels;
       resetWindow();
+      rulers = [];
+      rulerStart = null;
+      mousePx = null;
       if (image) fit();
       else draw();
     }
@@ -231,10 +284,25 @@
       <ViewerIcon name="reset" />
     </button>
   </div>
+  {#if rulers.length > 0}
+    <div class="mt-1 flex items-center gap-2 font-mono text-[11px] text-cyan-300/80">
+      <span>{rulers.length} pengukuran: {rulers.map((r) => r.label).join(' · ')}</span>
+      <button
+        type="button"
+        class="text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+        onclick={() => {
+          rulers = [];
+          rulerStart = null;
+        }}
+      >
+        Hapus
+      </button>
+    </div>
+  {/if}
 {/if}
 <div
   bind:this={frame}
-  class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded-[12px] border border-[#EAEAEA] bg-black"
+  class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded-[12px] border border-white/10 bg-black"
   style="min-height: 320px; max-height: calc(100dvh - 16rem);"
 >
   {#if overlay}
@@ -245,14 +313,57 @@
   {#if image}
     <figure class="m-0 p-3">
       <figcaption class="sr-only">{alt} — {image.width} × {image.height}</figcaption>
-      <canvas
-        bind:this={canvas}
-        style={`cursor: ${cursor()};${invertView ? ' filter: invert(1);' : ''}`}
-        onwheel={onWheel}
-        onpointerdown={onPointerDown}
-        onpointermove={onPointerMove}
-        onpointerup={onPointerUp}
-      ></canvas>
+      <div class="relative inline-block">
+        <canvas
+          bind:this={canvas}
+          style={`cursor: ${cursor()};${invertView ? ' filter: invert(1);' : ''}`}
+          onwheel={onWheel}
+          onpointerdown={onPointerDown}
+          onpointermove={onPointerMove}
+          onpointerup={onPointerUp}
+        ></canvas>
+        {#if (rulers.length > 0 || (rulerStart && mousePx)) && viewW > 0}
+          <svg
+            class="pointer-events-none absolute inset-0 h-full w-full"
+            viewBox={`0 0 ${viewW} ${viewH}`}
+            aria-hidden="true"
+          >
+            {#each rulers as r (`${r.x1},${r.y1},${r.x2},${r.y2}`)}
+              <line
+                x1={r.x1}
+                y1={r.y1}
+                x2={r.x2}
+                y2={r.y2}
+                stroke="#22d3ee"
+                stroke-width="1.5"
+                stroke-dasharray="5 3"
+              />
+              <circle cx={r.x1} cy={r.y1} r="3" fill="#22d3ee" />
+              <circle cx={r.x2} cy={r.y2} r="3" fill="#22d3ee" />
+              <text
+                x={(r.x1 + r.x2) / 2 + 6}
+                y={(r.y1 + r.y2) / 2 - 6}
+                fill="#22d3ee"
+                font-size="11"
+                font-family="monospace">{r.label}</text
+              >
+            {/each}
+            {#if rulerStart && mousePx}
+              <line
+                x1={rulerStart.x}
+                y1={rulerStart.y}
+                x2={mousePx.x}
+                y2={mousePx.y}
+                stroke="#22d3ee"
+                stroke-width="1.5"
+                stroke-dasharray="5 3"
+                opacity="0.6"
+              />
+              <circle cx={rulerStart.x} cy={rulerStart.y} r="3" fill="#22d3ee" />
+            {/if}
+          </svg>
+        {/if}
+      </div>
     </figure>
   {:else}
     <p class="p-6 text-center text-sm text-zinc-500">

@@ -225,6 +225,7 @@
         image={current?.image ?? null}
         rawPixels={current?.raw ?? null}
         invertPixels={current?.invertPixels ?? false}
+        pixelSpacingMm={meta?.pixelSpacingMm ?? null}
         onZoom={(p) => (zoomPct = p)}
         onWindow={(w, l) => {
           winWw = w;

@@ -20,6 +20,8 @@ export interface DicomMetadata {
   bodyPartExamined: string;
   viewPosition: string;
   weightKg: number | null;
+  /** Pixel Spacing baris (mm); null bila tag tak ada (ruler memakai px). */
+  pixelSpacingMm: number | null;
   kvp: number | null;
   ma: number | null;
   exposureTimeS: number | null;
@@ -154,6 +156,7 @@ export function parseDicom(buffer: ArrayBuffer): DicomMetadata {
     bodyPartExamined: safeString(ds, 'x00180015'),
     viewPosition: safeString(ds, 'x00185101'),
     weightKg: weight,
+    pixelSpacingMm: firstFloat(ds, 'x00280030'),
     kvp: firstFloat(ds, 'x00180060'),
     ma,
     exposureTimeS: timeS,
