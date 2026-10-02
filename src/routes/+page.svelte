@@ -53,6 +53,8 @@
   async function select(i: number) {
     selected = i;
     error = '';
+    winWw = null;
+    winWl = null;
     const f = files[i];
     if (!f) {
       activeFile.set(null);
@@ -67,7 +69,14 @@
           width: px.width,
           height: px.height
         };
-        const entry: ActiveFile = { name: f.name, kind: 'dicom', image, metadata };
+        const entry: ActiveFile = {
+          name: f.name,
+          kind: 'dicom',
+          image,
+          metadata,
+          raw: px.raw,
+          invertPixels: px.invert
+        };
         activeFile.set(entry);
         currentTags = listTags(f.buffer);
       } else {
@@ -108,6 +117,8 @@
   activeFile.subscribe((v) => (current = v));
 
   const meta = $derived(current?.metadata ?? null);
+  let winWw: number | null = $state(null);
+  let winWl: number | null = $state(null);
 
   function onDrop(e: DragEvent) {
     e.preventDefault();
@@ -210,7 +221,16 @@
       ondragleave={() => (dragging = false)}
       ondrop={onDrop}
     >
-      <ImageViewer image={current?.image ?? null} onZoom={(p) => (zoomPct = p)}>
+      <ImageViewer
+        image={current?.image ?? null}
+        rawPixels={current?.raw ?? null}
+        invertPixels={current?.invertPixels ?? false}
+        onZoom={(p) => (zoomPct = p)}
+        onWindow={(w, l) => {
+          winWw = w;
+          winWl = l;
+        }}
+      >
         {#snippet overlay()}
           {#if current}
             <span class="absolute top-2 left-2 space-y-px">
@@ -255,6 +275,11 @@
                 </span>
               </span>
               <span class="absolute right-2 bottom-2 space-y-px text-right">
+                {#if winWw !== null && winWl !== null}
+                  <span class="block" style="color: rgba(103,232,249,0.7)">
+                    WW {Math.round(winWw)} · WL {Math.round(winWl)}
+                  </span>
+                {/if}
                 <span class="block" style="color: rgba(103,232,249,0.7)">
                   {meta.exposureTimeS !== null ? `${meta.exposureTimeS} s` : '— s'}
                 </span>

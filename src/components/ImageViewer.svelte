@@ -1,18 +1,25 @@
 <script lang="ts">
   import ViewerIcon from '$components/ViewerIcon.svelte';
+  import { applyWindow, defaultWindow, renderGrayscale } from '$lib/dicom';
 
-  /** Alat aktif tunggal ala PACS. Window/ruler diisi Tugas 5-6. */
+  /** Alat aktif tunggal ala PACS. Ruler diisi Tugas 6. */
   export type ViewerTool = 'window' | 'pan' | 'zoom' | 'ruler';
 
   let {
     image,
+    rawPixels = null,
+    invertPixels = false,
     alt = 'Citra radiologi',
     onZoom,
+    onWindow,
     overlay
   }: {
     image: { data: Uint8ClampedArray; width: number; height: number } | null;
+    rawPixels?: Float64Array | null;
+    invertPixels?: boolean;
     alt?: string;
     onZoom?: (percent: number) => void;
+    onWindow?: (ww: number, wl: number) => void;
     overlay?: import('svelte').Snippet;
   } = $props();
 
@@ -27,6 +34,13 @@
   let tool: ViewerTool = $state('pan');
   let invertView = $state(false);
   let zoomBase = 1;
+  let wc = $state(0);
+  let ww = $state(1);
+  let winRange = 255;
+  let winBaseW = 1;
+  let winBaseL = 0;
+  let prevImage: typeof image = null;
+  let prevRaw: Float64Array | null = null;
 
   const MIN_ZOOM = 0.15;
   const MAX_ZOOM = 8;
@@ -41,23 +55,49 @@
   function draw() {
     onZoom?.(Math.round(zoom * 100));
     if (!canvas || !image) return;
+    const base = currentRgba();
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const putW = Math.max(1, Math.round(image.width * zoom));
-    const putH = Math.max(1, Math.round(image.height * zoom));
+    const putW = Math.max(1, Math.round(base.width * zoom));
+    const putH = Math.max(1, Math.round(base.height * zoom));
     canvas.width = putW;
     canvas.height = putH;
     const off = document.createElement('canvas');
-    off.width = image.width;
-    off.height = image.height;
+    off.width = base.width;
+    off.height = base.height;
     const offCtx = off.getContext('2d');
     if (!offCtx) return;
-    offCtx.putImageData(new ImageData(image.data, image.width, image.height), 0, 0);
+    offCtx.putImageData(new ImageData(base.data, base.width, base.height), 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(off, offsetX, offsetY, putW, putH);
   }
 
+  /** RGBA aktif: windowing ulang saat piksel mentah tersedia. */
+  function currentRgba(): { data: Uint8ClampedArray; width: number; height: number } {
+    if (!image) throw new Error('Tidak ada gambar');
+    if (rawPixels && rawPixels.length === image.width * image.height) {
+      const gray = applyWindow(rawPixels, wc, ww);
+      return {
+        data: renderGrayscale(gray, image.width, image.height, invertPixels),
+        width: image.width,
+        height: image.height
+      };
+    }
+    return image;
+  }
+
+  function resetWindow() {
+    if (rawPixels && rawPixels.length > 0) {
+      const d = defaultWindow(rawPixels);
+      wc = d.center;
+      ww = d.width;
+      winRange = d.width > 0 ? d.width : 1;
+      onWindow?.(ww, wc);
+    }
+  }
+
   function resetView() {
+    resetWindow();
     fit();
     invertView = false;
   }
@@ -89,6 +129,8 @@
     lastX = e.clientX;
     lastY = e.clientY;
     zoomBase = zoom;
+    winBaseW = ww;
+    winBaseL = wc;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
@@ -103,8 +145,14 @@
     } else if (tool === 'zoom') {
       zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomBase - (e.clientY - lastY) * 0.01));
       draw();
+    } else if (tool === 'window' && rawPixels) {
+      const step = winRange / 300;
+      ww = Math.max(1e-6, winBaseW + (e.clientX - lastX) * step);
+      wc = winBaseL - (e.clientY - lastY) * step;
+      onWindow?.(ww, wc);
+      draw();
     }
-    // window/ruler diisi Tugas 5-6.
+    // ruler diisi Tugas 6.
   }
 
   function onPointerUp() {
@@ -120,8 +168,14 @@
   $effect(() => {
     // draw() membaca `image`, jadi efek jalan ulang tiap gambar berganti.
     // Seperti MicroDicom: fit-to-window saat gambar dibuka.
-    if (image) fit();
-    else draw();
+    // Jendela di-reset ke min-max agar render awal identik.
+    if (image !== prevImage || rawPixels !== prevRaw) {
+      prevImage = image;
+      prevRaw = rawPixels;
+      resetWindow();
+      if (image) fit();
+      else draw();
+    }
   });
 </script>
 
@@ -137,8 +191,9 @@
           type="button"
           role="radio"
           aria-checked={tool === t.id}
-          title={t.label}
-          class={`flex items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs transition-colors ${tool === t.id ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-400 hover:text-zinc-100'}`}
+          title={t.id === 'window' && !rawPixels ? 'Windowing (khusus DICOM)' : t.label}
+          disabled={t.id === 'window' && !rawPixels}
+          class={`flex items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:opacity-40 ${tool === t.id ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-400 hover:text-zinc-100'}`}
           onclick={() => (tool = t.id)}
         >
           <ViewerIcon name={t.id} />

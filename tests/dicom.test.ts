@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { extractPixels, isDicomBuffer, listTags, parseDicom, renderGrayscale } from '$lib/dicom';
+import {
+  applyWindow,
+  defaultWindow,
+  extractPixels,
+  isDicomBuffer,
+  listTags,
+  parseDicom,
+  renderGrayscale
+} from '$lib/dicom';
 
 type TestElement = [number, number, string, Uint8Array | number[] | string | number];
 
@@ -456,5 +464,41 @@ describe('listTags', () => {
     expect(byTag.get('00100020')?.value).toBe('P001');
     expect(byTag.get('7FE00010')?.vr).toBe('OB');
     expect(tags.length).toBeGreaterThan(15);
+  });
+});
+
+describe('applyWindow', () => {
+  const ramp = new Float64Array([0, 50, 100, 150, 200]);
+
+  it('memetakan linear center 100 width 100', () => {
+    expect(Array.from(applyWindow(ramp, 100, 100))).toEqual([0, 0, 128, 255, 255]);
+  });
+
+  it('identik saat jendela melingkupi seluruh rentang', () => {
+    expect(Array.from(applyWindow(ramp, 100, 200))).toEqual([0, 64, 128, 191, 255]);
+  });
+
+  it('tidak melempar saat width nol dan menjaga panjang', () => {
+    const out = applyWindow(ramp, 100, 0);
+    expect(out.length).toBe(ramp.length);
+    expect(Array.from(out)).toEqual([0, 0, 128, 255, 255]);
+  });
+});
+
+describe('defaultWindow', () => {
+  it('mengambil center dan width dari min-max', () => {
+    expect(defaultWindow(new Float64Array([10, 20, 30]))).toEqual({ center: 20, width: 20 });
+  });
+
+  it('aman untuk data kosong', () => {
+    expect(defaultWindow(new Float64Array(0))).toEqual({ center: 0, width: 1 });
+  });
+});
+
+describe('extractPixels raw', () => {
+  it('menyertakan nilai rescale mentah sepanjang piksel', () => {
+    const px = extractPixels(buildDicom());
+    expect(px.raw.length).toBe(px.width * px.height);
+    expect(Array.from(px.raw)).toEqual([0, 85, 170, 255]);
   });
 });
