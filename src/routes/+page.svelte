@@ -213,21 +213,57 @@
       <ImageViewer image={current?.image ?? null} onZoom={(p) => (zoomPct = p)}>
         {#snippet overlay()}
           {#if current}
-            <span class="absolute top-2 left-2">
-              {meta ? `${meta.patientName || '—'} · ${meta.patientId || '—'}` : current.name}
+            <span class="absolute top-2 left-2 space-y-px">
+              <span class="block" style="color: rgba(103,232,249,0.9)"
+                >{meta ? meta.patientName || '—' : current.name}</span
+              >
+              {#if meta}
+                <span class="block" style="color: rgba(103,232,249,0.6)"
+                  >{meta.patientId || '—'} · {meta.sex || '—'}/{meta.age
+                    ? `${meta.age} th`
+                    : '—'}</span
+                >
+                <span class="block" style="color: rgba(103,232,249,0.6)"
+                  >{meta.studyDescription || '—'}</span
+                >
+                <span class="block" style="color: rgba(103,232,249,0.45)"
+                  >{meta.studyDate || ''}</span
+                >
+              {/if}
             </span>
             {#if meta}
-              <span class="absolute top-2 right-2 text-right">
-                {meta.studyDescription || '—'}<br />{meta.studyDate || ''}
+              <span class="absolute top-2 right-2 space-y-px text-right">
+                <span class="block" style="color: rgba(103,232,249,0.65)"
+                  >{meta.modality || ''}{meta.viewPosition ? ` · ${meta.viewPosition}` : ''}</span
+                >
+                <span class="block" style="color: rgba(103,232,249,0.45)"
+                  >{meta.bodyPartExamined || ''}</span
+                >
+                {#if meta.seriesDescription}
+                  <span class="block" style="color: rgba(103,232,249,0.45)"
+                    >{meta.seriesDescription}</span
+                  >
+                {/if}
               </span>
-              <span class="absolute bottom-2 left-2">
-                Zoom {zoomPct}% · {current.image.width} × {current.image.height}
+              <span class="absolute bottom-2 left-2 space-y-px">
+                <span class="block" style="color: rgba(103,232,249,0.7)">
+                  {current.image.width} × {current.image.height} · Zoom {zoomPct}%
+                </span>
+                <span class="block" style="color: rgba(103,232,249,0.55)">
+                  {meta.kvp !== null ? `${meta.kvp} kVp` : '— kVp'} ·
+                  {meta.ma !== null ? `${meta.ma} mA` : '— mA'}
+                </span>
               </span>
-              <span class="absolute right-2 bottom-2 text-right">
-                {meta.modality || ''}{meta.viewPosition ? ` · ${meta.viewPosition}` : ''}
+              <span class="absolute right-2 bottom-2 space-y-px text-right">
+                <span class="block" style="color: rgba(103,232,249,0.7)">
+                  {meta.exposureTimeS !== null ? `${meta.exposureTimeS} s` : '— s'}
+                </span>
+                <span class="block" style="color: rgba(103,232,249,0.55)">
+                  {meta.dapMgyCm2 !== null ? `${meta.dapMgyCm2.toFixed(2)} mGy·cm²` : '— DAP'}
+                </span>
               </span>
             {:else}
-              <span class="absolute bottom-2 left-2">
+              <span class="absolute bottom-2 left-2" style="color: rgba(103,232,249,0.7)">
                 Zoom {zoomPct}% · {current.image.width} × {current.image.height}
               </span>
             {/if}
