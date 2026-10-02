@@ -70,13 +70,11 @@
 
 <section class="panel p-6" aria-label="Data kalibrasi">
   <h2 class="panel-title">Data Kalibrasi</h2>
-  <p class="mb-3 text-xs text-[#787774]">
-    kVp &amp; mGy diisi manual. mAs default 20, bisa diubah.
-  </p>
+  <p class="mb-3 text-xs text-zinc-500">kVp &amp; mGy diisi manual. mAs default 20, bisa diubah.</p>
 
   <table class="w-full text-sm">
     <thead>
-      <tr class="border-b border-[#EAEAEA] text-left">
+      <tr class="border-b border-white/10 text-left">
         <th class="p-1.5 text-xs font-semibold">kVp</th>
         <th class="p-1.5 text-xs font-semibold">mAs</th>
         <th class="p-1.5 text-xs font-semibold">mGy</th>
@@ -86,7 +84,7 @@
     </thead>
     <tbody>
       {#each rows as r, i (i)}
-        <tr class="border-b border-[#EAEAEA] last:border-0">
+        <tr class="border-b border-white/10 last:border-0">
           <td class="p-1"
             ><input
               class="w-full border px-1"
@@ -129,13 +127,13 @@
 
   {#if formula}
     <p
-      class="mt-2 rounded-[6px] border border-[#EAEAEA] bg-[#F7F6F3] p-2 text-center font-mono font-bold text-[#111111]"
+      class="mt-2 rounded-[6px] border border-white/10 bg-white/[0.04] p-2 text-center font-mono font-bold text-zinc-100"
     >
       {formula}
     </p>
-    <p class="text-center text-xs text-[#787774]">{r2text} — koefisien a dan b diperbarui</p>
+    <p class="text-center text-xs text-zinc-500">{r2text} — koefisien a dan b diperbarui</p>
   {/if}
   {#if error}
-    <p role="alert" class="mt-2 text-sm text-[#9F2F2D]">{error}</p>
+    <p role="alert" class="mt-2 text-sm text-red-300">{error}</p>
   {/if}
 </section>
