@@ -12,7 +12,7 @@
   } from '$lib/dicom';
   import { activeFile, type ActiveFile } from '$lib/session';
 
-  let files: { name: string; buffer: ArrayBuffer }[] = $state([]);
+  let files: { name: string; buffer: ArrayBuffer; thumb: string | null }[] = $state([]);
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
@@ -30,13 +30,53 @@
     for (const f of Array.from(list)) {
       try {
         const buffer = await f.arrayBuffer();
-        files.push({ name: f.name, buffer });
+        const thumb = await makeThumb(buffer);
+        files.push({ name: f.name, buffer, thumb });
       } catch {
         error = `Gagal membaca ${f.name}`;
       }
     }
     files = [...files];
     if (files.length > 0) await select(Math.max(0, files.length - 1));
+  }
+
+  /** Thumbnail 56px untuk rel file (null bila gagal — rel tetap teks). */
+  async function makeThumb(buffer: ArrayBuffer): Promise<string | null> {
+    try {
+      const src = document.createElement('canvas');
+      if (isDicomBuffer(buffer)) {
+        const px = extractPixels(buffer);
+        src.width = px.width;
+        src.height = px.height;
+        const ctx = src.getContext('2d');
+        if (!ctx) return null;
+        ctx.putImageData(
+          new ImageData(
+            renderGrayscale(px.gray, px.width, px.height, px.invert),
+            px.width,
+            px.height
+          ),
+          0,
+          0
+        );
+      } else {
+        const bitmap = await createImageBitmap(new Blob([buffer]));
+        src.width = bitmap.width;
+        src.height = bitmap.height;
+        const ctx = src.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(bitmap, 0, 0);
+      }
+      if (src.width <= 0 || src.height <= 0) return null;
+      const scale = Math.min(1, 56 / Math.max(src.width, src.height));
+      const thumb = document.createElement('canvas');
+      thumb.width = Math.max(1, Math.round(src.width * scale));
+      thumb.height = Math.max(1, Math.round(src.height * scale));
+      thumb.getContext('2d')?.drawImage(src, 0, 0, thumb.width, thumb.height);
+      return thumb.toDataURL('image/png');
+    } catch {
+      return null;
+    }
   }
 
   async function removeFile(i: number) {
@@ -184,10 +224,17 @@
       />
       <ul class="slim-scroll mt-2 max-h-72 overflow-auto text-sm">
         {#each visible as { f, i } (f.name + i)}
-          <li class="group flex items-center gap-1">
+          <li class="group flex items-center gap-1.5">
+            {#if f.thumb}
+              <img
+                src={f.thumb}
+                alt=""
+                class="h-10 w-10 shrink-0 rounded-[5px] border border-white/10 bg-black object-cover"
+              />
+            {/if}
             <button
               type="button"
-              class={`w-full truncate rounded-[6px] p-1.5 text-left transition-colors ${i === selected ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-300 hover:bg-white/5'}`}
+              class={`min-w-0 flex-1 truncate rounded-[6px] p-1.5 text-left transition-colors ${i === selected ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-300 hover:bg-white/5'}`}
               onclick={() => void select(i)}
             >
               {f.name}
