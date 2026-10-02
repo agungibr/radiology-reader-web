@@ -69,18 +69,21 @@ add a 44px header strip: file/patient mono text + study text + tool
 slot. Global light theme untouched.
 
 **Acceptance criteria:**
+
 - [ ] `/` renders dark island (near-black panels, hairline borders);
-  `/dosimetry` and `/history` still light
+      `/dosimetry` and `/history` still light
 - [ ] Heading `Browser` still present (e2e smoke)
 - [ ] No new npm dependencies
 
 **Verification:**
+
 - [ ] `npm run check` green
 - [ ] Screenshots: `/` dark, `/dosimetry` light
 
 **Dependencies:** None
 
 **Files likely touched:**
+
 - `src/routes/+page.svelte`
 
 **Estimated scope:** Small (1–2 files)
@@ -92,16 +95,19 @@ TL patient/study, TR modality/view, BL dims/zoom, BR kVp/mA/mAs/DAP.
 Mono 11px, cyan-tinted like the example.
 
 **Acceptance criteria:**
+
 - [ ] All four corners show correct values from active file metadata
 - [ ] Empty state keeps current "Belum ada gambar" text
 - [ ] Overlay stays pointer-events-none (pan/drag unaffected)
 
 **Verification:**
+
 - [ ] Screenshot with Panoramic fixture: corners legible over image
 
 **Dependencies:** Task 1
 
 **Files likely touched:**
+
 - `src/routes/+page.svelte`
 
 **Estimated scope:** Small (1 file)
@@ -114,18 +120,21 @@ Image, Lainnya) via pure `groupDicomTags()` + small tag-name map for
 `Tag DICOM (N)` text (e2e flow).
 
 **Acceptance criteria:**
+
 - [ ] RED: `tests/dicomGroups.test.ts` fails (module missing)
 - [ ] GREEN: grouping correct, unknown tags → `Lainnya`, known tag
-  `(0010,0010)` displays `Patient Name`
+      `(0010,0010)` displays `Patient Name`
 - [ ] Groups collapse/expand; dark styling
 
 **Verification:**
+
 - [ ] `npm run test -- tests/dicomGroups.test.ts` green
 - [ ] e2e flow `Tag DICOM (\d+)` assertion still passes
 
 **Dependencies:** Task 1
 
 **Files likely touched:**
+
 - `src/lib/dicomGroups.ts` (new)
 - `tests/dicomGroups.test.ts` (new)
 - `src/components/TagsTable.svelte`
@@ -140,16 +149,19 @@ hand-rolled `ViewerIcon.svelte`. Wire pan/zoom/invert/reset to existing
 `ImageViewer` logic; window/ruler select state only (wired in Tasks 5–6).
 
 **Acceptance criteria:**
+
 - [ ] Exactly one active tool; switching updates cursor affordance
 - [ ] Existing zoom/pan/reset/invert behavior unchanged
 - [ ] No icon library dependency; Edge-safe inline SVG
 
 **Verification:**
+
 - [ ] `npm run check` green + screenshot of toolbar states
 
 **Dependencies:** Task 1
 
 **Files likely touched:**
+
 - `src/components/ViewerIcon.svelte` (new)
 - `src/components/ImageViewer.svelte`
 
@@ -163,19 +175,22 @@ drag-H=WW / drag-V=WL in Window tool, reset restores. Default WC/WW =
 data min-max so initial render is pixel-identical to today.
 
 **Acceptance criteria:**
+
 - [ ] RED: `applyWindow` ramp test fails before implementation
 - [ ] GREEN: known WC/WW maps black/gray/white exactly; `ww<=0`
-  guarded; default view unchanged vs current render
+      guarded; default view unchanged vs current render
 - [ ] Drag updates contrast live; Reset restores; overlay BR shows
-  live WW/WL values
+      live WW/WL values
 
 **Verification:**
+
 - [ ] `npm run test -- tests/dicom.test.ts` green (incl. new cases)
 - [ ] Screenshot: dragged vs default contrast visibly differs
 
 **Dependencies:** Task 4
 
 **Files likely touched:**
+
 - `src/lib/dicom.ts`
 - `tests/dicom.test.ts`
 - `src/components/ImageViewer.svelte`
@@ -190,17 +205,20 @@ list of measurements + clear, SVG overlay. Pixel spacing parsed from
 `(0028,0030)` into metadata (nullable).
 
 **Acceptance criteria:**
+
 - [ ] RED: 3-4-5 triangle + spacing tests fail first
 - [ ] GREEN: `0.5mm` spacing → `2.5 mm`; missing spacing → `5 px`
 - [ ] Overlay lines + labels render; Clear removes all
 
 **Verification:**
+
 - [ ] `npm run test -- tests/measure.test.ts tests/dicom.test.ts` green
 - [ ] Screenshot: ruler line + label on fixture image
 
 **Dependencies:** Task 4 (Task 5 independent — parallel safe)
 
 **Files likely touched:**
+
 - `src/lib/measure.ts` (new)
 - `tests/measure.test.ts` (new)
 - `src/lib/dicom.ts` (`pixelSpacingMm`)
@@ -215,19 +233,22 @@ list of measurements + clear, SVG overlay. Pixel spacing parsed from
 button text (e2e flow). Raster (JPG/PNG) files reuse their bitmap.
 
 **Acceptance criteria:**
+
 - [ ] Each file shows a recognizable thumbnail; active file highlighted
 - [ ] Filename button text unchanged; search filter still works
 - [ ] No `canvas` count regression for e2e (thumbnails are extra
-  canvases — flow.spec uses `toHaveCount(0)` only in broken-file state
-  with no valid image, so safe)
+      canvases — flow.spec uses `toHaveCount(0)` only in broken-file state
+      with no valid image, so safe)
 
 **Verification:**
+
 - [ ] Screenshot with 2 loaded files
 - [ ] e2e flow suite green on `preview` build
 
 **Dependencies:** Task 1 (parallel safe with Tasks 4–6)
 
 **Files likely touched:**
+
 - `src/routes/+page.svelte`
 
 **Estimated scope:** Small (1 file)
@@ -244,13 +265,13 @@ T1 shell ─┬─ T2 overlays
 
 ## Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| W/L changes default render | High | Default WC/WW = data min-max → pixel-identical; golden tests stay |
-| `extractPixels` return-shape change breaks callers | Med | Additive `raw` field only; existing tests untouched |
-| Thumbnail canvases break e2e `canvas` assertions | Med | Flow suite asserts `canvas` visible (still true) and count-0 only with no valid image |
-| Dark island leaks to global theme | Low | Scoped classes on viewer route wrapper only, no `app.css` body changes |
-| Ruler pixel-spacing missing | Low | Approved px fallback with unit label |
+| Risk                                               | Impact | Mitigation                                                                            |
+| -------------------------------------------------- | ------ | ------------------------------------------------------------------------------------- |
+| W/L changes default render                         | High   | Default WC/WW = data min-max → pixel-identical; golden tests stay                     |
+| `extractPixels` return-shape change breaks callers | Med    | Additive `raw` field only; existing tests untouched                                   |
+| Thumbnail canvases break e2e `canvas` assertions   | Med    | Flow suite asserts `canvas` visible (still true) and count-0 only with no valid image |
+| Dark island leaks to global theme                  | Low    | Scoped classes on viewer route wrapper only, no `app.css` body changes                |
+| Ruler pixel-spacing missing                        | Low    | Approved px fallback with unit label                                                  |
 
 ## Open Questions (resolved 2026-10-02)
 
