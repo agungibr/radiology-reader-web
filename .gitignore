@@ -28,3 +28,6 @@ test-results/
 *.db
 *.db-journal
 *.sqlite*
+
+# third-party reference dumps (never ship, own deps/license)
+design-example/
