@@ -116,112 +116,138 @@
   }
 </script>
 
-<div class="mx-auto grid max-w-6xl gap-4 px-6 py-8 lg:grid-cols-[264px_minmax(0,1fr)_320px]">
+<div
+  class="reading-room relative left-1/2 w-screen -translate-x-1/2 bg-[#0b0b0d] py-4 text-zinc-100"
+>
   <h1 class="sr-only">Viewer</h1>
-  <!-- Browser ala MicroDicom -->
-  <section class="panel content-start p-3" aria-label="Browser file">
-    <h2 class="panel-title">Browser</h2>
-    <label
-      class="btn-primary mt-2 block cursor-pointer px-3 py-1.5 text-center text-sm"
-      aria-label="Buka file"
-    >
-      Buka File
-      <input
-        type="file"
-        class="hidden"
-        multiple
-        accept=".dcm,.dicom,.jpg,.jpeg,.png,.bmp,.tiff,.tif"
-        onchange={(e) => e.currentTarget.files && void addFiles(e.currentTarget.files)}
-      />
-    </label>
-    <input
-      type="search"
-      class="mt-2 w-full rounded-[6px] border border-[#EAEAEA] bg-white px-2 py-1 text-sm"
-      placeholder="Cari file…"
-      aria-label="Cari file"
-      bind:value={query}
-    />
-    <ul class="slim-scroll mt-2 max-h-72 overflow-auto text-sm">
-      {#each visible as { f, i } (f.name + i)}
-        <li class="group flex items-center gap-1">
-          <button
-            type="button"
-            class={`w-full truncate rounded-[6px] p-1.5 text-left transition-colors ${i === selected ? 'bg-[#111111] font-semibold text-white' : 'hover:bg-[#F7F6F3]'}`}
-            onclick={() => void select(i)}
-          >
-            {f.name}
-          </button>
-          <button
-            type="button"
-            class="rounded px-1 text-[#787774] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#FDEBEC] hover:text-[#9F2F2D] focus-visible:opacity-100"
-            aria-label={`Hapus ${f.name}`}
-            onclick={() => void removeFile(i)}
-          >
-            ✕
-          </button>
-        </li>
-      {/each}
-    </ul>
-    {#if files.length === 0}
-      <p class="mt-2 text-xs text-[#787774]">Seret file ke viewport atau klik Buka File.</p>
-    {:else}
-      <p class="tnum mt-2 font-mono text-[11px] text-[#787774]">{files.length} file</p>
-    {/if}
-  </section>
-
-  <!-- Viewport -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- Slim workstation strip ala PACS -->
   <div
-    class={`rounded-[12px] border border-[#EAEAEA] bg-white p-4 transition-colors ${dragging ? 'border-[#111111]' : ''}`}
-    ondragover={(e) => {
-      e.preventDefault();
-      dragging = true;
-    }}
-    ondragleave={() => (dragging = false)}
-    ondrop={onDrop}
+    class="mx-auto flex h-11 max-w-6xl items-center gap-3 border-y border-white/10 bg-white/[0.02] px-6"
   >
-    <ImageViewer image={current?.image ?? null} onZoom={(p) => (zoomPct = p)}>
-      {#snippet overlay()}
-        {#if current}
-          <span class="absolute top-2 left-2">
-            {meta ? `${meta.patientName || '—'} · ${meta.patientId || '—'}` : current.name}
-          </span>
-          {#if meta}
-            <span class="absolute top-2 right-2 text-right">
-              {meta.studyDescription || '—'}<br />{meta.studyDate || ''}
-            </span>
-            <span class="absolute bottom-2 left-2">
-              Zoom {zoomPct}% · {current.image.width} × {current.image.height}
-            </span>
-            <span class="absolute right-2 bottom-2 text-right">
-              {meta.modality || ''}{meta.viewPosition ? ` · ${meta.viewPosition}` : ''}
-            </span>
-          {:else}
-            <span class="absolute bottom-2 left-2">
-              Zoom {zoomPct}% · {current.image.width} × {current.image.height}
-            </span>
-          {/if}
-        {/if}
-      {/snippet}
-    </ImageViewer>
-    {#if error}
-      <p
-        role="alert"
-        class="mt-2 rounded-[6px] border border-[#EAEAEA] bg-[#FDEBEC] p-2 text-sm text-[#9F2F2D]"
-      >
-        {error}
-      </p>
+    {#if meta}
+      <div class="flex min-w-0 flex-col leading-none">
+        <span class="truncate font-mono text-xs font-medium"
+          >{meta.patientName || '—'} · {meta.patientId || '—'}</span
+        >
+        <span class="truncate font-mono text-[10px] text-zinc-500">
+          {meta.sex || '—'}/{meta.age ? `${meta.age} th` : '—'} · {meta.studyDescription || '—'} · {meta.studyDate ||
+            ''}
+        </span>
+      </div>
+    {:else}
+      <span class="font-mono text-xs text-zinc-500">Ruang baca — pilih file untuk mulai</span>
     {/if}
-    <p class="tnum mt-2 font-mono text-[11px] text-[#787774]">
+    <span class="tnum ml-auto shrink-0 font-mono text-[11px] text-zinc-500">
       {current
         ? `${current.name} · ${current.kind === 'dicom' ? `DICOM · ${currentTags.length} tag` : 'gambar'}`
         : 'Siap'}
-    </p>
+    </span>
   </div>
 
-  <!-- Info -->
-  <div class="grid content-start gap-3">
-    <PatientCard metadata={meta} />
-    <TagsTable tags={currentTags} />
+  <div class="mx-auto grid max-w-6xl gap-3 px-6 pt-4 lg:grid-cols-[232px_minmax(0,1fr)_288px]">
+    <!-- Browser ala MicroDicom -->
+    <section
+      class="content-start rounded-[12px] border border-white/10 bg-white/[0.03] p-3"
+      aria-label="Browser file"
+    >
+      <h2 class="font-serif text-base font-semibold tracking-tight text-zinc-100">Browser</h2>
+      <label
+        class="mt-2 block cursor-pointer rounded-[6px] bg-zinc-100 px-3 py-1.5 text-center text-sm font-semibold text-black transition-colors hover:bg-white"
+        aria-label="Buka file"
+      >
+        Buka File
+        <input
+          type="file"
+          class="hidden"
+          multiple
+          accept=".dcm,.dicom,.jpg,.jpeg,.png,.bmp,.tiff,.tif"
+          onchange={(e) => e.currentTarget.files && void addFiles(e.currentTarget.files)}
+        />
+      </label>
+      <input
+        type="search"
+        class="mt-2 w-full rounded-[6px] border border-white/10 bg-white/5 px-2 py-1 text-sm text-zinc-100 [color-scheme:dark] placeholder:text-zinc-500"
+        placeholder="Cari file…"
+        aria-label="Cari file"
+        bind:value={query}
+      />
+      <ul class="slim-scroll mt-2 max-h-72 overflow-auto text-sm">
+        {#each visible as { f, i } (f.name + i)}
+          <li class="group flex items-center gap-1">
+            <button
+              type="button"
+              class={`w-full truncate rounded-[6px] p-1.5 text-left transition-colors ${i === selected ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-300 hover:bg-white/5'}`}
+              onclick={() => void select(i)}
+            >
+              {f.name}
+            </button>
+            <button
+              type="button"
+              class="rounded px-1 text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-300 focus-visible:opacity-100"
+              aria-label={`Hapus ${f.name}`}
+              onclick={() => void removeFile(i)}
+            >
+              ✕
+            </button>
+          </li>
+        {/each}
+      </ul>
+      {#if files.length === 0}
+        <p class="mt-2 text-xs text-zinc-500">Seret file ke viewport atau klik Buka File.</p>
+      {:else}
+        <p class="tnum mt-2 font-mono text-[11px] text-zinc-500">{files.length} file</p>
+      {/if}
+    </section>
+
+    <!-- Viewport -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class={`rounded-[12px] border border-white/10 bg-black p-3 transition-colors ${dragging ? 'border-cyan-300/60' : ''}`}
+      ondragover={(e) => {
+        e.preventDefault();
+        dragging = true;
+      }}
+      ondragleave={() => (dragging = false)}
+      ondrop={onDrop}
+    >
+      <ImageViewer image={current?.image ?? null} onZoom={(p) => (zoomPct = p)}>
+        {#snippet overlay()}
+          {#if current}
+            <span class="absolute top-2 left-2">
+              {meta ? `${meta.patientName || '—'} · ${meta.patientId || '—'}` : current.name}
+            </span>
+            {#if meta}
+              <span class="absolute top-2 right-2 text-right">
+                {meta.studyDescription || '—'}<br />{meta.studyDate || ''}
+              </span>
+              <span class="absolute bottom-2 left-2">
+                Zoom {zoomPct}% · {current.image.width} × {current.image.height}
+              </span>
+              <span class="absolute right-2 bottom-2 text-right">
+                {meta.modality || ''}{meta.viewPosition ? ` · ${meta.viewPosition}` : ''}
+              </span>
+            {:else}
+              <span class="absolute bottom-2 left-2">
+                Zoom {zoomPct}% · {current.image.width} × {current.image.height}
+              </span>
+            {/if}
+          {/if}
+        {/snippet}
+      </ImageViewer>
+      {#if error}
+        <p
+          role="alert"
+          class="mt-2 rounded-[6px] border border-red-500/20 bg-red-500/10 p-2 text-sm text-red-200"
+        >
+          {error}
+        </p>
+      {/if}
+    </div>
+
+    <!-- Info -->
+    <div class="grid content-start gap-3">
+      <PatientCard metadata={meta} tone="dark" />
+      <TagsTable tags={currentTags} tone="dark" />
+    </div>
   </div>
 </div>
