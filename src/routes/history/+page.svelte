@@ -58,8 +58,8 @@
 </script>
 
 <div class="mx-auto max-w-6xl px-6 py-8">
-  <h1 class="font-serif text-2xl font-semibold tracking-tight">History Perhitungan INAK / ESAK</h1>
-  <p class="tnum text-sm text-[#787774]">{total} data</p>
+  <h1 class="text-xl font-semibold tracking-tight">History Perhitungan INAK / ESAK</h1>
+  <p class="tnum text-sm text-zinc-500">{total} data</p>
 
   <div class="mt-4 flex flex-wrap gap-2 text-sm">
     <a class="btn-primary px-3 py-1.5" href={resolve('/api/history/export?format=xlsx')}>
@@ -68,7 +68,7 @@
     <a class="toolbtn" href={resolve('/api/history/export?format=csv')}>Simpan CSV</a>
     <button
       type="button"
-      class="toolbtn hover:bg-[#FDEBEC] hover:text-[#9F2F2D]"
+      class="toolbtn hover:bg-red-500/10 hover:text-red-300"
       disabled={busy || rows.length === 0}
       onclick={hapusSemua}
     >
@@ -79,7 +79,7 @@
   {#if error}
     <p
       role="alert"
-      class="mt-2 rounded-[6px] border border-[#EAEAEA] bg-[#FDEBEC] p-2 text-sm text-[#9F2F2D]"
+      class="mt-2 rounded-[6px] border border-red-500/20 bg-red-500/10 p-2 text-sm text-red-200"
     >
       {error}
     </p>
@@ -110,6 +110,6 @@
   </div>
 
   {#if loading}
-    <p class="mt-2 text-sm text-slate-400">Memuat…</p>
+    <p class="mt-2 text-sm text-zinc-500">Memuat…</p>
   {/if}
 </div>
