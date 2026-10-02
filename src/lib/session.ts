@@ -10,6 +10,10 @@ export interface ActiveFile {
   kind: 'dicom' | 'image';
   image: { data: Uint8ClampedArray; width: number; height: number };
   metadata: DicomMetadata | null;
+  /** Piksel mentah untuk windowing ulang (DICOM saja). */
+  raw?: Float64Array | null;
+  /** Flag MONOCHROME1 untuk render ulang windowing. */
+  invertPixels?: boolean;
 }
 
 export const activeFile = writable<ActiveFile | null>(null);

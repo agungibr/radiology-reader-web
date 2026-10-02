@@ -26,7 +26,8 @@ export default ts.config(
       '.wrangler/',
       'test-results/',
       'playwright-report/',
-      'node_modules/'
+      'node_modules/',
+      'design-example/'
     ]
   }
 );

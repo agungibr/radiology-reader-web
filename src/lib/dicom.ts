@@ -20,6 +20,8 @@ export interface DicomMetadata {
   bodyPartExamined: string;
   viewPosition: string;
   weightKg: number | null;
+  /** Pixel Spacing baris (mm); null bila tag tak ada (ruler memakai px). */
+  pixelSpacingMm: number | null;
   kvp: number | null;
   ma: number | null;
   exposureTimeS: number | null;
@@ -35,6 +37,8 @@ export interface PixelData {
   height: number;
   /** true untuk MONOCHROME1 (perlu invert). */
   invert: boolean;
+  /** Nilai rescale mentah (slope/intercept terapan) untuk windowing ulang. */
+  raw: Float64Array;
 }
 
 export interface DicomTag {
@@ -152,6 +156,7 @@ export function parseDicom(buffer: ArrayBuffer): DicomMetadata {
     bodyPartExamined: safeString(ds, 'x00180015'),
     viewPosition: safeString(ds, 'x00185101'),
     weightKg: weight,
+    pixelSpacingMm: firstFloat(ds, 'x00280030'),
     kvp: firstFloat(ds, 'x00180060'),
     ma,
     exposureTimeS: timeS,
@@ -246,7 +251,7 @@ export function extractPixels(buffer: ArrayBuffer): PixelData {
       if (v < lo) lo = v;
       if (v > hi) hi = v;
     }
-    if (!(hi - lo > 1e-9)) return { gray: new Uint8Array(count), width, height, invert };
+    if (!(hi - lo > 1e-9)) return { gray: new Uint8Array(count), width, height, invert, raw };
   }
 
   const gray = new Uint8Array(count);
@@ -255,7 +260,39 @@ export function extractPixels(buffer: ArrayBuffer): PixelData {
     const clamped = Math.min(hi, Math.max(lo, raw[i] as number));
     gray[i] = Math.round(((clamped - lo) / span) * 255);
   }
-  return { gray, width, height, invert };
+  return { gray, width, height, invert, raw };
+}
+
+/**
+ * Windowing ulang linear: petakan nilai mentah ke 0–255 via
+ * lo = center − width/2, hi = center + width/2 (clamp + bulatkan).
+ * Width nol/negatif dijaga agar tak melempar (mendekati fungsi step).
+ */
+export function applyWindow(raw: Float64Array, center: number, width: number): Uint8Array {
+  const w = width > 0 ? width : 1e-6;
+  const lo = center - w / 2;
+  const hi = center + w / 2;
+  const span = hi - lo;
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) {
+    const v = Math.min(hi, Math.max(lo, raw[i] as number));
+    out[i] = Math.round(((v - lo) / span) * 255);
+  }
+  return out;
+}
+
+/** Jendela default dari min-max data (render awal identik min-max). */
+export function defaultWindow(raw: Float64Array): { center: number; width: number } {
+  if (raw.length === 0) return { center: 0, width: 1 };
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (let i = 0; i < raw.length; i++) {
+    const v = raw[i] as number;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  if (!(hi - lo > 1e-9)) return { center: lo, width: 1 };
+  return { center: (lo + hi) / 2, width: hi - lo };
 }
 /** Grayscale → RGBA untuk `putImageData`. `invert` untuk MONOCHROME1. */
 export function renderGrayscale(
