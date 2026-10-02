@@ -12,11 +12,13 @@
   ];
 </script>
 
-<header class="border-b border-[#EAEAEA] bg-[#FFFFFF]/90 backdrop-blur">
-  <nav class="mx-auto flex max-w-6xl items-center gap-1 px-6 py-3" aria-label="Navigasi utama">
-    <span class="mr-4 flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+<header class="border-b border-white/10 bg-[#0b0b0d]/90 backdrop-blur">
+  <nav class="mx-auto flex h-11 max-w-6xl items-center gap-1 px-6" aria-label="Navigasi utama">
+    <span
+      class="mr-4 flex items-center gap-2 text-[13px] font-semibold tracking-tight text-zinc-100"
+    >
       <span
-        class="inline-flex h-6 w-6 items-center justify-center rounded-[6px] bg-[#111111] text-sm font-bold text-white"
+        class="inline-flex h-5 w-5 items-center justify-center rounded-[5px] bg-zinc-100 text-xs font-bold text-black"
         aria-hidden="true">+</span
       >
       Radiology Reader
@@ -25,7 +27,7 @@
       <a
         href={resolve(l.href)}
         aria-current={page.url.pathname === l.href ? 'page' : undefined}
-        class={`rounded-[6px] px-3 py-1.5 text-sm transition-colors ${page.url.pathname === l.href ? 'bg-[#111111] font-semibold text-white' : 'text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111]'}`}
+        class={`rounded-[5px] px-2.5 py-1 text-[13px] transition-colors ${page.url.pathname === l.href ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-100'}`}
       >
         {l.label}
       </a>
@@ -38,7 +40,7 @@
 </main>
 
 <footer
-  class="mx-auto flex max-w-6xl items-center gap-4 border-t border-[#EAEAEA] px-6 py-3 font-mono text-[11px] text-[#787774]"
+  class="mx-auto flex max-w-6xl items-center gap-4 border-t border-white/10 px-6 py-3 font-mono text-[11px] text-zinc-600"
 >
   <span>DRL nasional · 39 baris referensi</span>
   <span class="ml-auto">Gambar tidak pernah diunggah — parsing di browser</span>

@@ -201,7 +201,7 @@
       class="content-start rounded-[12px] border border-white/10 bg-white/[0.03] p-3"
       aria-label="Browser file"
     >
-      <h2 class="font-serif text-base font-semibold tracking-tight text-zinc-100">Browser</h2>
+      <h2 class="text-sm font-semibold tracking-tight text-zinc-100">Browser</h2>
       <label
         class="mt-2 block cursor-pointer rounded-[6px] bg-zinc-100 px-3 py-1.5 text-center text-sm font-semibold text-black transition-colors hover:bg-white"
         aria-label="Buka file"
@@ -355,8 +355,8 @@
 
     <!-- Info -->
     <div class="grid content-start gap-3">
-      <PatientCard metadata={meta} tone="dark" />
-      <TagsTable tags={currentTags} tone="dark" />
+      <PatientCard metadata={meta} />
+      <TagsTable tags={currentTags} />
     </div>
   </div>
 </div>
