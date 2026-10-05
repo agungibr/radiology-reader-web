@@ -310,7 +310,7 @@
                 <button
                   type="button"
                   class="absolute top-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-300 focus-visible:opacity-100"
-                  aria-label={`Hapus ${f.name}`}
+                  aria-label={`Hapus file ${i + 1}`}
                   onclick={() => void removeFile(i)}
                 >
                   ✕
