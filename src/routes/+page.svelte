@@ -2,6 +2,7 @@
   import ImageViewer from '$components/ImageViewer.svelte';
   import PatientCard from '$components/PatientCard.svelte';
   import TagsTable from '$components/TagsTable.svelte';
+  import ViewerIcon from '$components/ViewerIcon.svelte';
   import {
     extractPixels,
     isDicomBuffer,
@@ -16,14 +17,7 @@
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
-  let query = $state('');
   let zoomPct = $state(100);
-
-  const visible = $derived(
-    files
-      .map((f, i) => ({ f, i }))
-      .filter(({ f }) => f.name.toLowerCase().includes(query.trim().toLowerCase()))
-  );
 
   async function addFiles(list: FileList | File[]) {
     error = '';
@@ -165,192 +159,171 @@
     dragging = false;
     if (e.dataTransfer?.files) void addFiles(e.dataTransfer.files);
   }
+
+  /** Buka folder (Chromium/Edge): impor semua file citra di dalamnya. */
+  async function openFolder() {
+    error = '';
+    const w = window as unknown as {
+      showDirectoryPicker?: () => Promise<{
+        values(): AsyncIterableIterator<{
+          kind: string;
+          name: string;
+          getFile(): Promise<File>;
+        }>;
+      }>;
+    };
+    if (!w.showDirectoryPicker) {
+      error = 'Browser ini tidak mendukung buka folder — gunakan Buka File.';
+      return;
+    }
+    try {
+      const dir = await w.showDirectoryPicker();
+      const picked: File[] = [];
+      for await (const entry of dir.values()) {
+        if (entry.kind === 'file' && /\.(dcm|dicom|jpg|jpeg|png|bmp|tif|tiff)$/i.test(entry.name)) {
+          picked.push(await entry.getFile());
+        }
+      }
+      if (picked.length > 0) await addFiles(picked);
+      else error = 'Tidak ada file citra di folder tersebut.';
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      error = 'Gagal membaca folder.';
+    }
+  }
 </script>
 
-<div
-  class="reading-room relative left-1/2 w-screen -translate-x-1/2 bg-[#0b0b0d] py-4 text-zinc-100"
->
-  <h1 class="sr-only">Viewer</h1>
-  <!-- Slim workstation strip ala PACS -->
-  <div
-    class="mx-auto flex h-11 max-w-6xl items-center gap-3 border-y border-white/10 bg-white/[0.02] px-6"
-  >
-    {#if meta}
-      <div class="flex min-w-0 flex-col leading-none">
-        <span class="truncate font-mono text-xs font-medium"
-          >{meta.patientName || '—'} · {meta.patientId || '—'}</span
-        >
-        <span class="truncate font-mono text-[10px] text-zinc-500">
-          {meta.sex || '—'}/{meta.age ? `${meta.age} th` : '—'} · {meta.studyDescription || '—'} · {meta.studyDate ||
-            ''}
-        </span>
-      </div>
-    {:else}
-      <span class="font-mono text-xs text-zinc-500">Ruang baca — pilih file untuk mulai</span>
-    {/if}
-    <span class="tnum ml-auto shrink-0 font-mono text-[11px] text-zinc-500">
-      {current
-        ? `${current.name} · ${current.kind === 'dicom' ? `DICOM · ${currentTags.length} tag` : 'gambar'}`
-        : 'Siap'}
-    </span>
-  </div>
+<div class="px-3 py-3">
+  <h1 class="sr-only">Browser</h1>
 
-  <div class="mx-auto grid max-w-6xl gap-3 px-6 pt-4 lg:grid-cols-[232px_minmax(0,1fr)_288px]">
-    <!-- Browser ala MicroDicom -->
-    <section
-      class="content-start rounded-[12px] border border-white/10 bg-white/[0.03] p-3"
-      aria-label="Browser file"
-    >
-      <h2 class="text-sm font-semibold tracking-tight text-zinc-100">Browser</h2>
-      <label
-        class="mt-2 block cursor-pointer rounded-[6px] bg-zinc-100 px-3 py-1.5 text-center text-sm font-semibold text-black transition-colors hover:bg-white"
-        aria-label="Buka file"
-      >
-        Buka File
-        <input
-          type="file"
-          class="hidden"
-          multiple
-          accept=".dcm,.dicom,.jpg,.jpeg,.png,.bmp,.tiff,.tif"
-          onchange={(e) => e.currentTarget.files && void addFiles(e.currentTarget.files)}
-        />
-      </label>
-      <input
-        type="search"
-        class="mt-2 w-full rounded-[6px] border border-white/10 bg-white/5 px-2 py-1 text-sm text-zinc-100 [color-scheme:dark] placeholder:text-zinc-500"
-        placeholder="Cari file…"
-        aria-label="Cari file"
-        bind:value={query}
-      />
-      <ul class="slim-scroll mt-2 max-h-72 overflow-auto text-sm">
-        {#each visible as { f, i } (f.name + i)}
-          <li class="group flex items-center gap-1.5">
-            {#if f.thumb}
-              <img
-                src={f.thumb}
-                alt=""
-                class="h-10 w-10 shrink-0 rounded-[5px] border border-white/10 bg-black object-cover"
-              />
-            {/if}
-            <button
-              type="button"
-              class={`min-w-0 flex-1 truncate rounded-[6px] p-1.5 text-left transition-colors ${i === selected ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-300 hover:bg-white/5'}`}
-              onclick={() => void select(i)}
-            >
-              {f.name}
-            </button>
-            <button
-              type="button"
-              class="rounded px-1 text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-300 focus-visible:opacity-100"
-              aria-label={`Hapus ${f.name}`}
-              onclick={() => void removeFile(i)}
-            >
-              ✕
-            </button>
-          </li>
-        {/each}
-      </ul>
-      {#if files.length === 0}
-        <p class="mt-2 text-xs text-zinc-500">Seret file ke viewport atau klik Buka File.</p>
-      {:else}
-        <p class="tnum mt-2 font-mono text-[11px] text-zinc-500">{files.length} file</p>
-      {/if}
-    </section>
-
-    <!-- Viewport -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-      class={`rounded-[12px] border border-white/10 bg-black p-3 transition-colors ${dragging ? 'border-cyan-300/60' : ''}`}
-      ondragover={(e) => {
-        e.preventDefault();
-        dragging = true;
-      }}
-      ondragleave={() => (dragging = false)}
-      ondrop={onDrop}
-    >
-      <ImageViewer
-        image={current?.image ?? null}
-        rawPixels={current?.raw ?? null}
-        invertPixels={current?.invertPixels ?? false}
-        pixelSpacingMm={meta?.pixelSpacingMm ?? null}
-        onZoom={(p) => (zoomPct = p)}
-        onWindow={(w, l) => {
-          winWw = w;
-          winWl = l;
+  <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div class="min-w-0">
+      <!-- Viewport -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class={`rounded-[12px] border border-white/10 bg-black p-3 transition-colors ${dragging ? 'border-blue-500/60' : ''}`}
+        ondragover={(e) => {
+          e.preventDefault();
+          dragging = true;
         }}
+        ondragleave={() => (dragging = false)}
+        ondrop={onDrop}
       >
-        {#snippet overlay()}
-          {#if current}
-            <span class="absolute top-2 left-2 space-y-px">
-              <span class="block" style="color: rgba(103,232,249,0.9)"
-                >{meta ? meta.patientName || '—' : current.name}</span
-              >
-              {#if meta}
-                <span class="block" style="color: rgba(103,232,249,0.6)"
-                  >{meta.patientId || '—'} · {meta.sex || '—'}/{meta.age
-                    ? `${meta.age} th`
-                    : '—'}</span
-                >
-                <span class="block" style="color: rgba(103,232,249,0.6)"
-                  >{meta.studyDescription || '—'}</span
-                >
-                <span class="block" style="color: rgba(103,232,249,0.45)"
-                  >{meta.studyDate || ''}</span
-                >
-              {/if}
-            </span>
-            {#if meta}
+        <ImageViewer
+          image={current?.image ?? null}
+          rawPixels={current?.raw ?? null}
+          invertPixels={current?.invertPixels ?? false}
+          pixelSpacingMm={meta?.pixelSpacingMm ?? null}
+          onZoom={(p) => (zoomPct = p)}
+          onWindow={(w, l) => {
+            winWw = w;
+            winWl = l;
+          }}
+          {fileActions}
+        >
+          {#snippet overlay()}
+            {#if current}
+              <span class="absolute top-2 left-2 space-y-px">
+                <span class="block" style="color: rgba(255,255,255,0.9)"> Im: 1/1 · Se: 1 </span>
+                <span class="block" style="color: rgba(255,255,255,0.6)">
+                  {meta
+                    ? meta.studyDescription || meta.bodyPartExamined || current.name
+                    : current.name}
+                </span>
+              </span>
               <span class="absolute top-2 right-2 space-y-px text-right">
-                <span class="block" style="color: rgba(103,232,249,0.65)"
-                  >{meta.modality || ''}{meta.viewPosition ? ` · ${meta.viewPosition}` : ''}</span
-                >
-                <span class="block" style="color: rgba(103,232,249,0.45)"
-                  >{meta.bodyPartExamined || ''}</span
-                >
-                {#if meta.seriesDescription}
-                  <span class="block" style="color: rgba(103,232,249,0.45)"
-                    >{meta.seriesDescription}</span
-                  >
+                <span class="block" style="color: rgba(255,255,255,0.9)">Radiology Reader</span>
+                {#if meta}
+                  <span class="block" style="color: rgba(255,255,255,0.6)">
+                    {meta.patientId || '—'}
+                  </span>
+                  <span class="block" style="color: rgba(255,255,255,0.45)">
+                    {meta.studyDate || ''}
+                  </span>
                 {/if}
               </span>
               <span class="absolute bottom-2 left-2 space-y-px">
-                <span class="block" style="color: rgba(103,232,249,0.7)">
-                  {current.image.width} × {current.image.height} · Zoom {zoomPct}%
-                </span>
-                <span class="block" style="color: rgba(103,232,249,0.55)">
-                  {meta.kvp !== null ? `${meta.kvp} kVp` : '— kVp'} ·
-                  {meta.ma !== null ? `${meta.ma} mA` : '— mA'}
+                {#if winWw !== null && winWl !== null}
+                  <span class="block" style="color: rgba(255,255,255,0.9)">
+                    W: {Math.round(winWw)} L: {Math.round(winWl)}
+                  </span>
+                {/if}
+                <span class="block" style="color: rgba(255,255,255,0.6)">
+                  Zoom: {zoomPct}%
                 </span>
               </span>
               <span class="absolute right-2 bottom-2 space-y-px text-right">
-                {#if winWw !== null && winWl !== null}
-                  <span class="block" style="color: rgba(103,232,249,0.7)">
-                    WW {Math.round(winWw)} · WL {Math.round(winWl)}
-                  </span>
-                {/if}
-                <span class="block" style="color: rgba(103,232,249,0.7)">
-                  {meta.exposureTimeS !== null ? `${meta.exposureTimeS} s` : '— s'}
+                <span class="block" style="color: rgba(255,255,255,0.9)">
+                  {current.image.width} × {current.image.height}
                 </span>
-                <span class="block" style="color: rgba(103,232,249,0.55)">
-                  {meta.dapMgyCm2 !== null ? `${meta.dapMgyCm2.toFixed(2)} mGy·cm²` : '— DAP'}
+                <span class="block" style="color: rgba(255,255,255,0.6)">
+                  {current.kind === 'dicom' ? 'DCM' : 'IMG'}
                 </span>
-              </span>
-            {:else}
-              <span class="absolute bottom-2 left-2" style="color: rgba(103,232,249,0.7)">
-                Zoom {zoomPct}% · {current.image.width} × {current.image.height}
               </span>
             {/if}
-          {/if}
-        {/snippet}
-      </ImageViewer>
-      {#if error}
-        <p
-          role="alert"
-          class="mt-2 rounded-[6px] border border-red-500/20 bg-red-500/10 p-2 text-sm text-red-200"
-        >
-          {error}
-        </p>
-      {/if}
+          {/snippet}
+        </ImageViewer>
+        {#if error}
+          <p
+            role="alert"
+            class="mt-2 rounded-[6px] border border-red-500/20 bg-red-500/10 p-2 text-sm text-red-200"
+          >
+            {error}
+          </p>
+        {/if}
+      </div>
+
+      <!-- Filmstrip -->
+      <section
+        aria-label="Film"
+        class="mt-3 rounded-[12px] border border-white/10 bg-white/[0.02] p-2"
+      >
+        {#if files.length > 0}
+          <ul class="slim-scroll flex gap-2 overflow-x-auto">
+            {#each files as f, i (f.name + i)}
+              <li class="group relative w-28 shrink-0">
+                <button
+                  type="button"
+                  onclick={() => void select(i)}
+                  class={`block w-full rounded-[8px] border p-1.5 text-left transition-colors ${i === selected ? 'border-blue-500 bg-blue-600/10' : 'border-white/10 hover:border-white/25'}`}
+                >
+                  {#if f.thumb}
+                    <img
+                      src={f.thumb}
+                      alt=""
+                      class="h-16 w-full rounded-[5px] bg-black object-cover"
+                    />
+                  {:else}
+                    <div
+                      class="flex h-16 w-full items-center justify-center rounded-[5px] bg-black font-mono text-[10px] text-zinc-600"
+                    >
+                      —
+                    </div>
+                  {/if}
+                  <span class="mt-1 block truncate font-mono text-[11px] text-zinc-200">
+                    {i + 1}: {f.name}
+                  </span>
+                  <span class="block font-mono text-[10px] text-zinc-500">
+                    {isDicomBuffer(f.buffer) ? 'DICOM' : 'gambar'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="absolute top-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-300 focus-visible:opacity-100"
+                  aria-label={`Hapus file ${i + 1}`}
+                  onclick={() => void removeFile(i)}
+                >
+                  ✕
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <p class="p-2 text-xs text-zinc-500">
+            Belum ada file. Buka File/Folder atau seret file ke viewport.
+          </p>
+        {/if}
+      </section>
     </div>
 
     <!-- Info -->
@@ -360,3 +333,29 @@
     </div>
   </div>
 </div>
+
+{#snippet fileActions()}
+  <label
+    class="flex cursor-pointer items-center gap-1.5 rounded-[6px] bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-blue-500"
+    aria-label="Buka file"
+  >
+    <ViewerIcon name="image" class="h-3.5 w-3.5" />
+    Buka File
+    <input
+      type="file"
+      class="hidden"
+      multiple
+      accept=".dcm,.dicom,.jpg,.jpeg,.png,.bmp,.tiff,.tif"
+      onchange={(e) => e.currentTarget.files && void addFiles(e.currentTarget.files)}
+    />
+  </label>
+  <button
+    type="button"
+    class="flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-xs text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
+    title="Buka folder"
+    onclick={openFolder}
+  >
+    <ViewerIcon name="folder" />
+    <span class="hidden lg:inline">Folder</span>
+  </button>
+{/snippet}

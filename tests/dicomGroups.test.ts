@@ -1,44 +1,49 @@
 import { describe, expect, it } from 'vitest';
-import { groupDicomTags } from '$lib/dicomGroups';
+import { filterDicomTags, pageWindow } from '$lib/dicomGroups';
 import type { DicomTag } from '$lib/dicom';
 
 function tag(tag: string, vr = 'LO', value = 'x'): DicomTag {
   return { tag, vr, value };
 }
 
-describe('groupDicomTags', () => {
-  it('groups patient tags under Pasien with display names', () => {
-    const groups = groupDicomTags([
-      tag('00100010', 'PN', 'SITI RAHMA'),
-      tag('00100020', 'LO', 'P001')
-    ]);
-    const pasien = groups.find((g) => g.name === 'Pasien');
-    expect(pasien).toBeDefined();
-    expect(pasien?.tags.map((t) => t.name)).toEqual(['Patient Name', 'Patient ID']);
-    expect(pasien?.tags[0]?.value).toBe('SITI RAHMA');
+describe('filterDicomTags', () => {
+  const tags = [
+    tag('00100010', 'PN', 'SITI RAHMA'),
+    tag('00100020', 'LO', 'P001'),
+    tag('00180060', 'DS', '70')
+  ];
+
+  it('matches display name case-insensitively', () => {
+    expect(filterDicomTags(tags, 'patient').map((t) => t.tag)).toEqual(['00100010', '00100020']);
   });
 
-  it('routes unknown tags to Lainnya preserving count', () => {
-    const tags = [tag('00100010'), tag('99990099', 'UN', 'misteri'), tag('00180060')];
-    const groups = groupDicomTags(tags);
-    const total = groups.reduce((s, g) => s + g.tags.length, 0);
-    expect(total).toBe(3);
-    const lainnya = groups.find((g) => g.name === 'Lainnya');
-    expect(lainnya?.tags.map((t) => t.tag)).toEqual(['99990099']);
+  it('matches tag hex fragments', () => {
+    expect(filterDicomTags(tags, '0018').map((t) => t.tag)).toEqual(['00180060']);
   });
 
-  it('orders groups Pasien, Studi, Citra, Lainnya and omits empties', () => {
-    const groups = groupDicomTags([tag('00280010'), tag('00100010')]);
-    expect(groups.map((g) => g.name)).toEqual(['Pasien', 'Citra']);
+  it('matches values', () => {
+    expect(filterDicomTags(tags, 'rahma').map((t) => t.tag)).toEqual(['00100010']);
   });
 
-  it('puts study and exposure tags in the right modules', () => {
-    const groups = groupDicomTags([
-      tag('00081030', 'LO', 'Chest PA'),
-      tag('00181151', 'DS', '200')
-    ]);
-    const names = groups.map((g) => g.name);
-    expect(names).toContain('Studi');
-    expect(names).toContain('Citra');
+  it('returns everything on empty query', () => {
+    expect(filterDicomTags(tags, '   ')).toHaveLength(3);
+  });
+
+  it('returns empty on no match', () => {
+    expect(filterDicomTags(tags, 'zzz-tidak-ada')).toEqual([]);
+  });
+});
+
+describe('pageWindow', () => {
+  it('lists all pages when few', () => {
+    expect(pageWindow(3, 5)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('collapses edges on first page', () => {
+    expect(pageWindow(1, 15)).toEqual([1, 2, '…', 14, 15]);
+  });
+
+  it('shows neighborhood mid-range', () => {
+    expect(pageWindow(8, 15)).toEqual([1, 2, '…', 7, 8, 9, '…', 14, 15]);
   });
 });
