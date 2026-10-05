@@ -13,7 +13,7 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
   await expect(page.getByRole('button', { name: /sample-chest-pa\.dcm/ })).toBeVisible();
   await expect(page.getByText('TEST001').first()).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
-  await expect(page.getByText(/Tag DICOM \(\d+\)/)).toBeVisible();
+  await expect(page.getByText(/Total: \d+ tag/)).toBeVisible();
 
   // 2. Dosimetri terisi otomatis dari DICOM
   await page.getByRole('link', { name: 'Dosimetri' }).click();
@@ -55,7 +55,7 @@ test('raster gagal dimuat menampilkan error dan dapat dipulihkan', async ({ page
   await expect(page.getByRole('alert')).not.toBeEmpty();
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect(page.getByText('TEST001')).toHaveCount(0);
-  await expect(page.getByText(/Tag DICOM \([1-9]\d*\)/)).toHaveCount(0);
+  await expect(page.getByText(/Total: [1-9]\d* tag/)).toHaveCount(0);
   expect(pageErrors).toEqual([]);
 
   await page.getByRole('button', { name: /sample-chest-pa\.dcm/ }).click();
