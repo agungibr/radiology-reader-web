@@ -274,106 +274,109 @@
   });
 </script>
 
-{#if image}
+<div
+  class="flex flex-wrap items-center gap-1 rounded-[8px] border border-white/10 bg-white/[0.02] px-2 py-1.5"
+  role="toolbar"
+  aria-label="Alat viewport"
+>
+  {#if fileActions}
+    {@render fileActions()}
+    <span class="mx-1 h-5 w-px shrink-0 bg-white/10" aria-hidden="true"></span>
+  {/if}
   <div
-    class="flex flex-wrap items-center gap-1 rounded-[8px] border border-white/10 bg-white/[0.02] px-2 py-1.5"
-    role="toolbar"
-    aria-label="Alat viewport"
+    class="inline-flex rounded-[6px] border border-white/10 bg-white/[0.03] p-0.5"
+    role="radiogroup"
+    aria-label="Alat"
   >
-    {#if fileActions}
-      {@render fileActions()}
-      <span class="mx-1 h-5 w-px shrink-0 bg-white/10" aria-hidden="true"></span>
-    {/if}
-    <div
-      class="inline-flex rounded-[6px] border border-white/10 bg-white/[0.03] p-0.5"
-      role="radiogroup"
-      aria-label="Alat"
-    >
-      {#each tools as t (t.id)}
-        <button
-          type="button"
-          role="radio"
-          aria-checked={tool === t.id}
-          title={t.id === 'window' && !rawPixels ? 'Windowing (khusus DICOM)' : t.label}
-          disabled={t.id === 'window' && !rawPixels}
-          class={`flex items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:opacity-40 ${tool === t.id ? 'bg-blue-600 font-semibold text-white' : 'text-zinc-400 hover:text-zinc-100'}`}
-          onclick={() => (tool = t.id)}
-        >
-          <ViewerIcon name={t.id} />
-          <span class="hidden lg:inline">{t.label}</span>
-        </button>
-      {/each}
-    </div>
-    <span class="tnum w-14 text-center font-mono text-xs text-zinc-300"
-      >{Math.round(zoom * 100)}%</span
-    >
-    <span class="mx-1 h-5 w-px bg-white/10" aria-hidden="true"></span>
-    <button
-      type="button"
-      class={`rounded-[5px] p-1.5 transition-colors ${invertView ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'}`}
-      aria-pressed={invertView}
-      title="Invert"
-      onclick={() => (invertView = !invertView)}
-    >
-      <ViewerIcon name="invert" />
-    </button>
-    <button
-      type="button"
-      class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
-      title="Fit"
-      onclick={fit}
-    >
-      <ViewerIcon name="fit" />
-    </button>
-    <button
-      type="button"
-      class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
-      title="Reset"
-      onclick={resetView}
-    >
-      <ViewerIcon name="reset" />
-    </button>
-    <button
-      type="button"
-      class="rounded-[5px] px-2 py-1 font-mono text-xs text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
-      title="Rasio 1:1"
-      onclick={oneToOne}
-    >
-      1:1
-    </button>
-    <button
-      type="button"
-      class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
-      title="Putar 90°"
-      onclick={rotate}
-    >
-      <ViewerIcon name="rotate" />
-    </button>
-    <span class="ml-auto"></span>
-    <button
-      type="button"
-      class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
-      title="Layar penuh"
-      onclick={toggleFullscreen}
-    >
-      <ViewerIcon name="expand" />
-    </button>
-  </div>
-  {#if rulers.length > 0}
-    <div class="mt-1 flex items-center gap-2 font-mono text-[11px] text-blue-300/80">
-      <span>{rulers.length} pengukuran: {rulers.map((r) => r.label).join(' · ')}</span>
+    {#each tools as t (t.id)}
       <button
         type="button"
-        class="text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
-        onclick={() => {
-          rulers = [];
-          rulerStart = null;
-        }}
+        role="radio"
+        aria-checked={tool === t.id}
+        title={t.id === 'window' && !rawPixels ? 'Windowing (khusus DICOM)' : t.label}
+        disabled={!image || (t.id === 'window' && !rawPixels)}
+        class={`flex items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:opacity-40 ${tool === t.id ? 'bg-blue-600 font-semibold text-white' : 'text-zinc-400 hover:text-zinc-100'}`}
+        onclick={() => (tool = t.id)}
       >
-        Hapus
+        <ViewerIcon name={t.id} />
+        <span class="hidden lg:inline">{t.label}</span>
       </button>
-    </div>
-  {/if}
+    {/each}
+  </div>
+  <span class="tnum w-14 text-center font-mono text-xs text-zinc-300"
+    >{image ? `${Math.round(zoom * 100)}%` : '—'}</span
+  >
+  <span class="mx-1 h-5 w-px bg-white/10" aria-hidden="true"></span>
+  <button
+    type="button"
+    class={`rounded-[5px] p-1.5 transition-colors disabled:opacity-40 ${invertView ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'}`}
+    aria-pressed={invertView}
+    title="Invert"
+    disabled={!image}
+    onclick={() => (invertView = !invertView)}
+  >
+    <ViewerIcon name="invert" />
+  </button>
+  <button
+    type="button"
+    class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40"
+    title="Fit"
+    disabled={!image}
+    onclick={fit}
+  >
+    <ViewerIcon name="fit" />
+  </button>
+  <button
+    type="button"
+    class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40"
+    title="Reset"
+    disabled={!image}
+    onclick={resetView}
+  >
+    <ViewerIcon name="reset" />
+  </button>
+  <button
+    type="button"
+    class="rounded-[5px] px-2 py-1 font-mono text-xs text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40"
+    title="Rasio 1:1"
+    disabled={!image}
+    onclick={oneToOne}
+  >
+    1:1
+  </button>
+  <button
+    type="button"
+    class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40"
+    title="Putar 90°"
+    disabled={!image}
+    onclick={rotate}
+  >
+    <ViewerIcon name="rotate" />
+  </button>
+  <span class="ml-auto"></span>
+  <button
+    type="button"
+    class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
+    title="Layar penuh"
+    onclick={toggleFullscreen}
+  >
+    <ViewerIcon name="expand" />
+  </button>
+</div>
+{#if rulers.length > 0}
+  <div class="mt-1 flex items-center gap-2 font-mono text-[11px] text-blue-300/80">
+    <span>{rulers.length} pengukuran: {rulers.map((r) => r.label).join(' · ')}</span>
+    <button
+      type="button"
+      class="text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+      onclick={() => {
+        rulers = [];
+        rulerStart = null;
+      }}
+    >
+      Hapus
+    </button>
+  </div>
 {/if}
 <div
   bind:this={frame}
