@@ -22,7 +22,8 @@
     alt = 'Citra radiologi',
     onZoom,
     onWindow,
-    overlay
+    overlay,
+    fileActions
   }: {
     image: { data: Uint8ClampedArray; width: number; height: number } | null;
     rawPixels?: Float64Array | null;
@@ -32,6 +33,7 @@
     onZoom?: (percent: number) => void;
     onWindow?: (ww: number, wl: number) => void;
     overlay?: import('svelte').Snippet;
+    fileActions?: import('svelte').Snippet;
   } = $props();
 
   let canvas: HTMLCanvasElement | null = $state(null);
@@ -63,20 +65,21 @@
   const MAX_ZOOM = 8;
 
   const tools: { id: ViewerTool; label: string }[] = [
-    { id: 'window', label: 'W/L' },
+    { id: 'window', label: 'Window/Level' },
     { id: 'pan', label: 'Pan' },
     { id: 'zoom', label: 'Zoom' },
-    { id: 'ruler', label: 'Ruler' }
+    { id: 'ruler', label: 'Measure' }
   ];
+  let rotation = $state(0);
 
   function draw() {
     onZoom?.(Math.round(zoom * 100));
     if (!canvas || !image) return;
     const base = currentRgba();
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const putW = Math.max(1, Math.round(base.width * zoom));
-    const putH = Math.max(1, Math.round(base.height * zoom));
+    const rot = ((rotation % 360) + 360) % 360;
+    const swap = rot === 90 || rot === 270;
+    const putW = Math.max(1, Math.round((swap ? base.height : base.width) * zoom));
+    const putH = Math.max(1, Math.round((swap ? base.width : base.height) * zoom));
     canvas.width = putW;
     canvas.height = putH;
     viewW = putW;
@@ -87,8 +90,20 @@
     const offCtx = off.getContext('2d');
     if (!offCtx) return;
     offCtx.putImageData(new ImageData(base.data, base.width, base.height), 0, 0);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off, offsetX, offsetY, putW, putH);
+    ctx.save();
+    ctx.translate(putW / 2 + offsetX, putH / 2 + offsetY);
+    ctx.rotate((rot * Math.PI) / 180);
+    ctx.drawImage(
+      off,
+      (-base.width * zoom) / 2,
+      (-base.height * zoom) / 2,
+      base.width * zoom,
+      base.height * zoom
+    );
+    ctx.restore();
   }
 
   /** RGBA aktif: windowing ulang saat piksel mentah tersedia. */
@@ -119,9 +134,32 @@
     resetWindow();
     fit();
     invertView = false;
+    rotation = 0;
     rulers = [];
     rulerStart = null;
     mousePx = null;
+  }
+
+  function oneToOne() {
+    zoom = 1;
+    offsetX = 0;
+    offsetY = 0;
+    draw();
+  }
+
+  function rotate() {
+    rotation = (rotation + 90) % 360;
+    offsetX = 0;
+    offsetY = 0;
+    rulers = [];
+    rulerStart = null;
+    mousePx = null;
+    draw();
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void frame?.requestFullscreen();
   }
 
   function zoomBy(factor: number) {
@@ -131,10 +169,13 @@
 
   function fit() {
     if (!frame || !image) return;
+    const swap = rotation === 90 || rotation === 270;
+    const effW = swap ? image.height : image.width;
+    const effH = swap ? image.width : image.height;
     const r = frame.getBoundingClientRect();
     zoom = Math.min(
       MAX_ZOOM,
-      Math.max(MIN_ZOOM, Math.min((r.width - 24) / image.width, (r.height - 24) / image.height))
+      Math.max(MIN_ZOOM, Math.min((r.width - 24) / effW, (r.height - 24) / effH))
     );
     offsetX = 0;
     offsetY = 0;
@@ -223,6 +264,7 @@
       prevImage = image;
       prevRaw = rawPixels;
       resetWindow();
+      rotation = 0;
       rulers = [];
       rulerStart = null;
       mousePx = null;
@@ -233,7 +275,15 @@
 </script>
 
 {#if image}
-  <div class="flex flex-wrap items-center gap-1" role="toolbar" aria-label="Alat viewport">
+  <div
+    class="flex flex-wrap items-center gap-1 rounded-[8px] border border-white/10 bg-white/[0.02] px-2 py-1.5"
+    role="toolbar"
+    aria-label="Alat viewport"
+  >
+    {#if fileActions}
+      {@render fileActions()}
+      <span class="mx-1 h-5 w-px shrink-0 bg-white/10" aria-hidden="true"></span>
+    {/if}
     <div
       class="inline-flex rounded-[6px] border border-white/10 bg-white/[0.03] p-0.5"
       role="radiogroup"
@@ -246,7 +296,7 @@
           aria-checked={tool === t.id}
           title={t.id === 'window' && !rawPixels ? 'Windowing (khusus DICOM)' : t.label}
           disabled={t.id === 'window' && !rawPixels}
-          class={`flex items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:opacity-40 ${tool === t.id ? 'bg-zinc-100 font-semibold text-black' : 'text-zinc-400 hover:text-zinc-100'}`}
+          class={`flex items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:opacity-40 ${tool === t.id ? 'bg-blue-600 font-semibold text-white' : 'text-zinc-400 hover:text-zinc-100'}`}
           onclick={() => (tool = t.id)}
         >
           <ViewerIcon name={t.id} />
@@ -260,7 +310,7 @@
     <span class="mx-1 h-5 w-px bg-white/10" aria-hidden="true"></span>
     <button
       type="button"
-      class={`rounded-[5px] p-1.5 transition-colors ${invertView ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'}`}
+      class={`rounded-[5px] p-1.5 transition-colors ${invertView ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'}`}
       aria-pressed={invertView}
       title="Invert"
       onclick={() => (invertView = !invertView)}
@@ -283,9 +333,34 @@
     >
       <ViewerIcon name="reset" />
     </button>
+    <button
+      type="button"
+      class="rounded-[5px] px-2 py-1 font-mono text-xs text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
+      title="Rasio 1:1"
+      onclick={oneToOne}
+    >
+      1:1
+    </button>
+    <button
+      type="button"
+      class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
+      title="Putar 90°"
+      onclick={rotate}
+    >
+      <ViewerIcon name="rotate" />
+    </button>
+    <span class="ml-auto"></span>
+    <button
+      type="button"
+      class="rounded-[5px] p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
+      title="Layar penuh"
+      onclick={toggleFullscreen}
+    >
+      <ViewerIcon name="expand" />
+    </button>
   </div>
   {#if rulers.length > 0}
-    <div class="mt-1 flex items-center gap-2 font-mono text-[11px] text-cyan-300/80">
+    <div class="mt-1 flex items-center gap-2 font-mono text-[11px] text-blue-300/80">
       <span>{rulers.length} pengukuran: {rulers.map((r) => r.label).join(' · ')}</span>
       <button
         type="button"
@@ -334,16 +409,16 @@
                 y1={r.y1}
                 x2={r.x2}
                 y2={r.y2}
-                stroke="#22d3ee"
+                stroke="#60a5fa"
                 stroke-width="1.5"
                 stroke-dasharray="5 3"
               />
-              <circle cx={r.x1} cy={r.y1} r="3" fill="#22d3ee" />
-              <circle cx={r.x2} cy={r.y2} r="3" fill="#22d3ee" />
+              <circle cx={r.x1} cy={r.y1} r="3" fill="#60a5fa" />
+              <circle cx={r.x2} cy={r.y2} r="3" fill="#60a5fa" />
               <text
                 x={(r.x1 + r.x2) / 2 + 6}
                 y={(r.y1 + r.y2) / 2 - 6}
-                fill="#22d3ee"
+                fill="#60a5fa"
                 font-size="11"
                 font-family="monospace">{r.label}</text
               >
@@ -354,12 +429,12 @@
                 y1={rulerStart.y}
                 x2={mousePx.x}
                 y2={mousePx.y}
-                stroke="#22d3ee"
+                stroke="#60a5fa"
                 stroke-width="1.5"
                 stroke-dasharray="5 3"
                 opacity="0.6"
               />
-              <circle cx={rulerStart.x} cy={rulerStart.y} r="3" fill="#22d3ee" />
+              <circle cx={rulerStart.x} cy={rulerStart.y} r="3" fill="#60a5fa" />
             {/if}
           </svg>
         {/if}

@@ -9,7 +9,7 @@
   --color-line: rgb(255 255 255 / 0.1);
   --color-ink: #f4f4f5;
   --color-muted: #8b8b93;
-  --color-accent: #22d3ee;
+  --color-accent: #3b82f6;
 }
 
 html {
@@ -90,18 +90,18 @@ input::placeholder {
 }
 
 .toolbtn[aria-pressed='true'] {
-  background-color: var(--color-ink);
-  border-color: var(--color-ink);
-  color: #0b0b0d;
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
 }
 
-/* Aksi primer tunggal — terang solid di atas gelap, tanpa gradient/shadow */
+/* Aksi primer tunggal — biru solid ala desktop, tanpa gradient/shadow */
 .btn-primary {
-  background-color: var(--color-ink);
-  border: 1px solid var(--color-ink);
+  background-color: #2563eb;
+  border: 1px solid #2563eb;
   border-radius: 6px;
   box-shadow: none;
-  color: #0b0b0d;
+  color: #ffffff;
   font-weight: 600;
   transition:
     background-color 150ms ease,
@@ -109,7 +109,7 @@ input::placeholder {
 }
 
 .btn-primary:hover {
-  background-color: #ffffff;
+  background-color: #3b82f6;
 }
 
 .btn-primary:active {
