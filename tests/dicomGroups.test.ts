@@ -54,6 +54,42 @@ describe('nameDicomTag', () => {
   });
 });
 
+describe('dictionary coverage', () => {
+  it.each([
+    ['00080005', 'Specific Character Set'],
+    ['00080008', 'Image Type'],
+    ['00080012', 'Instance Creation Date'],
+    ['00080013', 'Instance Creation Time'],
+    ['00080016', 'SOP Class UID'],
+    ['00080018', 'SOP Instance UID'],
+    ['00080021', 'Series Date'],
+    ['00080031', 'Series Time'],
+    ['00080070', 'Manufacturer'],
+    ['00081010', 'Station Name'],
+    ['00081090', "Manufacturer's Model Name"],
+    ['00181000', 'Device Serial Number'],
+    ['00181020', 'Software Versions'],
+    ['00181030', 'Protocol Name'],
+    ['00181110', 'Distance Source to Detector'],
+    ['00181111', 'Distance Source to Patient'],
+    ['00185100', 'Patient Position'],
+    ['0020000E', 'Series Instance UID'],
+    ['00200010', 'Study ID'],
+    ['00200011', 'Series Number'],
+    ['00200013', 'Instance Number'],
+    ['00200060', 'Laterality'],
+    ['00280008', 'Number of Frames'],
+    ['00281052', 'Rescale Intercept'],
+    ['00281053', 'Rescale Slope'],
+    ['00282110', 'Lossy Image Compression'],
+    ['00400254', 'Performed Procedure Step Description']
+  ])('names standard tag %s as "%s"', (hex, expected) => {
+    const t = nameDicomTag(tag(hex, 'LO', 'x'));
+    expect(t.name).toBe(expected);
+    expect(t.known).toBe(true);
+  });
+});
+
 describe('pageWindow', () => {
   it('lists all pages when few', () => {
     expect(pageWindow(3, 5)).toEqual([1, 2, 3, 4, 5]);
