@@ -300,3 +300,24 @@ sebagai expander `DICOM Tags` (default tertutup).
   dosimetri/history); Series + Study aktif ditampilkan.
 - Fixture e2e: `e2e/fixtures/series/` (1 study, 2 series × 3 slice,
   instance diacak untuk membuktikan sort numerik) via `generate_series.py`.
+
+## 13. Follow-up UI/UX (review `radiology_reader_ui_ux_followup.md`)
+
+- **Tags dua lapis** (Option A+B): ringkasan sidebar (8 baris pertama, tanpa
+  cari/paginasi, + Total + tombol duplex `Open/Tutup full inspector`) dan
+  inspector full-width (kolom Tag ID | Nama | VR | Nilai, lebar kolom tetap,
+  nilai ellipsis + tooltip `title`, paginasi satu baris + pilihan 15/25/50/100
+  per halaman, header sticky, cari tetap di atas).
+- **Nama jujur**: kamus bila dikenal; `Unknown tag` (grup genap) /
+  `Private tag` (grup ganjil) bila tidak — tidak mengarang label.
+- **Kebijakan zoom**: refit otomatis saat layout berubah (buka/tutup panel,
+  resize) kecuali zoom manual/1:1 (`userZoomed`, Reset mengembalikan);
+  label zoom selalu sama dengan status render.
+- **Study info**: nilai penuh via klik-salin (keyboard-accessible) + tooltip;
+  Patient ID mask penuh (nilai asli tetap dipakai dosimetri).
+- **Privasi**: e2e mencegat POST `/api/history` — payload hanya 16 field
+  skalar <4KB (tanpa byte citra).
+- Deviasi dari dokumen review: ringkasan sidebar tanpa kolom cari (satu
+  pencarian di inspector agar tak split-brain); tanpa expand-per-baris
+  (title + DOM penuh untuk AT); tanpa resize-handle panel; tanpa impor ZIP
+  (file + folder saja).
