@@ -1,7 +1,7 @@
 <script lang="ts">
   import ImageViewer from '$components/ImageViewer.svelte';
-  import PatientCard from '$components/PatientCard.svelte';
   import StudiesPanel from '$components/StudiesPanel.svelte';
+  import StudyInfoCard from '$components/StudyInfoCard.svelte';
   import TagsTable from '$components/TagsTable.svelte';
   import ViewerIcon from '$components/ViewerIcon.svelte';
   import {
@@ -191,13 +191,21 @@
       error = e instanceof Error ? e.message : `Gagal memuat ${f.name}`;
     }
   }
-
   /** Series aktif berisi file terpilih (null bila tak ada file). */
   const activeSeries = $derived.by(() => {
     for (const st of studies)
       for (const s of st.series) if (s.slices.some((sl) => sl.fileIndex === selected)) return s;
     return null;
   });
+
+  /** Study aktif berisi file terpilih (null bila tak ada file). */
+  const activeStudy = $derived.by(() => {
+    for (const st of studies)
+      if (st.series.some((s) => s.slices.some((sl) => sl.fileIndex === selected))) return st;
+    return null;
+  });
+
+  let tagsOpen = $state(false);
 
   let sliceIdx = $state(0);
 
@@ -397,10 +405,36 @@
 
     <!-- Info -->
     <div class="grid min-w-0 content-start gap-3 xl:col-start-3 xl:row-start-1">
-      <PatientCard metadata={meta} />
-    </div>
-    <div class="min-w-0 xl:col-span-3 xl:row-start-2">
-      <TagsTable tags={currentTags} />
+      <StudyInfoCard
+        metadata={meta}
+        studyLabel={activeStudy?.label ?? ''}
+        studyDescription={activeStudy?.description ?? ''}
+        seriesLabel={activeSeries?.label ?? ''}
+        seriesDescription={activeSeries?.description ?? ''}
+      />
+      <div class="rounded-[12px] border border-white/10 bg-white/[0.02]">
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 p-4 text-left"
+          aria-expanded={tagsOpen}
+          onclick={() => (tagsOpen = !tagsOpen)}
+        >
+          <span class="font-mono text-[10px] font-semibold tracking-widest text-zinc-500 uppercase"
+            >DICOM Tags</span
+          >
+          <ViewerIcon
+            name="chevR"
+            class={tagsOpen
+              ? 'ml-auto h-3 w-3 rotate-90 text-zinc-500'
+              : 'ml-auto h-3 w-3 text-zinc-500'}
+          />
+        </button>
+        {#if tagsOpen}
+          <div class="px-2 pb-2">
+            <TagsTable tags={currentTags} />
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 </div>

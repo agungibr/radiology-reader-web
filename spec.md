@@ -277,3 +277,26 @@ Deviasi implementasi vs §2 (disengaja, parity visual/fungsi tetap):
 - Tags: Tag hex + VR + nilai (tanpa deskripsi — dicom-parser tak berkamus).
 - Teks batas DAP `120` bukan `120.0` (format angka JS).
 - File DICOM wajib Part-10 valid (butuh meta header 0002,0010 — batas dicom-parser; desktop `force=True` lebih toleran).
+
+## 12. Viewer Workstation (v2, branch `feat/viewer-workstation`)
+
+Layout `/` ala wireframe: top bar (brand + nav) ganti sidebar; grid
+Studies (280px) | viewport (1fr) | info (300px); filmstrip horizontal diganti
+StudiesPanel vertikal; tags sempat full-width lalu pindah ke kolom kanan
+sebagai expander `DICOM Tags` (default tertutup).
+
+- **Studies tree** (`src/lib/study.ts` murni + `StudiesPanel.svelte`): grup
+  Study → Series dari UID (`StudyInstanceUID`, `SeriesInstanceUID`,
+  `SeriesNumber`, `InstanceNumber` diparsing di `dicom.ts`); file tanpa UID
+  menjadi pseudo-study sendiri (jalur X-ray tak berubah). Urutan slice numerik.
+- **Slice scroll**: wheel di viewport menggulir iris bila series >1 slice
+  (Ctrl+wheel tetap zoom; 1 slice = wheel zoom seperti dulu), didukung tombol
+  `Slice i/N` di toolbar + keyboard ↑/↓. Dosimetri mengikuti iris aktif via
+  `activeFile`.
+- **Lazy decode**: metadata semua file dibaca saat impor; piksel hanya iris
+  terlihat + cache LRU 5 (`SliceCache`), dibersihkan saat files berubah.
+  Multi-frame pixel data di luar scope (render frame pertama).
+- **Study info**: Patient ID selalu mask `•••••••` (nilai asli tetap dipakai
+  dosimetri/history); Series + Study aktif ditampilkan.
+- Fixture e2e: `e2e/fixtures/series/` (1 study, 2 series × 3 slice,
+  instance diacak untuk membuktikan sort numerik) via `generate_series.py`.
