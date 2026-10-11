@@ -206,6 +206,7 @@
   });
 
   let tagsOpen = $state(false);
+  let inspectorOpen = $state(false);
 
   let sliceIdx = $state(0);
 
@@ -431,12 +432,25 @@
         </button>
         {#if tagsOpen}
           <div class="px-2 pb-2">
-            <TagsTable tags={currentTags} />
+            <TagsTable tags={currentTags} variant="summary" />
+            <button
+              type="button"
+              class="mt-1 w-full rounded-[6px] border border-white/10 px-2 py-1.5 text-xs font-semibold text-zinc-200 transition-colors hover:bg-white/5 hover:text-zinc-100"
+              aria-expanded={inspectorOpen}
+              onclick={() => (inspectorOpen = !inspectorOpen)}
+            >
+              {inspectorOpen ? 'Tutup full inspector' : 'Open full inspector'}
+            </button>
           </div>
         {/if}
       </div>
     </div>
   </div>
+  {#if inspectorOpen}
+    <div class="mt-3 min-w-0">
+      <TagsTable tags={currentTags} variant="full" pageSize={25} />
+    </div>
+  {/if}
 </div>
 
 {#snippet fileActions()}

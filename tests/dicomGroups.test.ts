@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterDicomTags, pageWindow } from '$lib/dicomGroups';
+import { filterDicomTags, nameDicomTag, pageWindow } from '$lib/dicomGroups';
 import type { DicomTag } from '$lib/dicom';
 
 function tag(tag: string, vr = 'LO', value = 'x'): DicomTag {
@@ -31,6 +31,26 @@ describe('filterDicomTags', () => {
 
   it('returns empty on no match', () => {
     expect(filterDicomTags(tags, 'zzz-tidak-ada')).toEqual([]);
+  });
+});
+
+describe('nameDicomTag', () => {
+  it('memakai nama kamus untuk tag dikenal', () => {
+    const t = nameDicomTag(tag('00100010', 'PN', 'SITI'));
+    expect(t.name).toBe('Patient Name');
+    expect(t.known).toBe(true);
+  });
+
+  it('melabeli jujur tag tak dikenal grup genap', () => {
+    const t = nameDicomTag(tag('00180061', 'DS', '1'));
+    expect(t.name).toBe('Unknown tag');
+    expect(t.known).toBe(false);
+  });
+
+  it('melabeli jujur tag privat grup ganjil', () => {
+    const t = nameDicomTag(tag('00091000', 'LO', 'x'));
+    expect(t.name).toBe('Private tag');
+    expect(t.known).toBe(false);
   });
 });
 

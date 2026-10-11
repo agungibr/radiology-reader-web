@@ -41,6 +41,8 @@
   let canvas: HTMLCanvasElement | null = $state(null);
   let frame: HTMLDivElement | null = $state(null);
   let zoom = $state(1);
+  /** true setelah zoom manual/1:1 — refit otomatis dinonaktifkan sampai Reset. */
+  let userZoomed = $state(false);
   let offsetX = $state(0);
   let offsetY = $state(0);
   let dragging = $state(false);
@@ -131,6 +133,7 @@
 
   function resetView() {
     resetWindow();
+    userZoomed = false;
     fit();
     invertView = false;
     rotation = 0;
@@ -141,6 +144,7 @@
 
   function oneToOne() {
     zoom = 1;
+    userZoomed = true;
     offsetX = 0;
     offsetY = 0;
     draw();
@@ -163,6 +167,7 @@
 
   function zoomBy(factor: number) {
     zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+    userZoomed = true;
     draw();
   }
 
@@ -268,6 +273,7 @@
       prevImage = image;
       prevRaw = rawPixels;
       resetWindow();
+      userZoomed = false;
       rotation = 0;
       rulers = [];
       rulerStart = null;
@@ -275,6 +281,17 @@
       if (image) fit();
       else draw();
     }
+  });
+
+  $effect(() => {
+    // Refit saat bingkai berubah ukuran (mis. panel tags dibuka/tutup),
+    // kecuali pengguna sudah mengatur zoom manual/1:1.
+    if (!frame) return;
+    const ro = new ResizeObserver(() => {
+      if (!userZoomed && image) fit();
+    });
+    ro.observe(frame);
+    return () => ro.disconnect();
   });
 </script>
 

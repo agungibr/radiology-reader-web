@@ -67,7 +67,7 @@ agar Pages memakai config tersebut).
   `calibration.ts`, `history.ts`, `validation.ts`, `session.ts`, `study.ts`
 - `src/components/` — ImageViewer, StudiesPanel, StudyInfoCard, ExposureForm,
   CalibrationTable, DapForm, DrlBadge, DoseEstimateCard, PatientCard,
-  TagsTable, HistoryTable
+  TagsTable (ringkasan + inspector penuh), HistoryTable
 - `e2e/fixtures/` — DICOM sintetis anonim + generator (`generate_fixture.py`); `series/` multi-series untuk scroll iris
 
 Angka dijamin cocok dengan desktop (golden tests dari Python):
