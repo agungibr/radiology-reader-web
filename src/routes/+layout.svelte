@@ -24,15 +24,31 @@
     class={`flex shrink-0 flex-row items-center gap-1 border-b border-white/10 bg-[#0e0e11] px-3 py-2 md:min-h-dvh md:flex-col md:items-stretch md:gap-1 md:border-r md:border-b-0 md:p-3 ${collapsed ? 'md:w-16' : 'md:w-56'}`}
     aria-label="Navigasi utama"
   >
-    <span
-      class="mr-2 flex items-center gap-2 text-sm font-semibold tracking-tight text-zinc-100 md:mr-0 md:mb-3 md:px-1 md:pt-1"
+    <div
+      class={`flex items-center gap-1 md:mb-3 md:px-1 md:pt-1 ${collapsed ? 'md:justify-center' : ''}`}
     >
-      <span
-        class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-blue-600 text-sm text-white"
-        aria-hidden="true"><i class="fa-solid fa-x-ray"></i></span
+      <button
+        type="button"
+        class="shrink-0 rounded-[5px] p-1.5 text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-100"
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'}
+        title={collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'}
+        onclick={() => (collapsed = !collapsed)}
       >
-      <span class={`hidden ${collapsed ? '' : 'sm:inline md:inline'}`}>Radiology Reader</span>
-    </span>
+        <ViewerIcon name={collapsed ? 'chevR' : 'chevL'} class="h-4 w-4" />
+      </button>
+      {#if !collapsed}
+        <span
+          class="mr-2 flex items-center gap-2 text-sm font-semibold tracking-tight text-zinc-100 md:mr-0"
+        >
+          <span
+            class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-blue-600 text-sm text-white"
+            aria-hidden="true"><i class="fa-solid fa-x-ray"></i></span
+          >
+          <span class="hidden sm:inline">Radiology Reader</span>
+        </span>
+      {/if}
+    </div>
     <nav class="flex flex-row items-center gap-1 md:flex-col md:items-stretch" aria-label="Halaman">
       {#each links as l (l.href)}
         <a
@@ -46,16 +62,6 @@
         </a>
       {/each}
     </nav>
-    <button
-      type="button"
-      class="ml-auto shrink-0 rounded-[5px] p-1.5 text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-100 md:mt-2 md:ml-0 md:self-start"
-      aria-expanded={!collapsed}
-      aria-label={collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'}
-      title={collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'}
-      onclick={() => (collapsed = !collapsed)}
-    >
-      <ViewerIcon name={collapsed ? 'chevR' : 'chevL'} class="h-4 w-4" />
-    </button>
     <span
       class={`mt-auto hidden items-center gap-2.5 px-2.5 py-2 text-sm text-zinc-500 md:flex ${collapsed ? 'md:justify-center md:px-2' : ''}`}
     >
