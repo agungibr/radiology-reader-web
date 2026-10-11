@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { clampSliceIndex, groupIntoStudies, SliceCache, type SliceInfo } from '$lib/study';
+import {
+  clampSliceIndex,
+  clampStudiesWidth,
+  groupIntoStudies,
+  loadStudiesWidth,
+  SliceCache,
+  type SliceInfo
+} from '$lib/study';
 
 function slice(over: Partial<SliceInfo> & { name: string }): SliceInfo {
   return {
@@ -97,5 +104,18 @@ describe('SliceCache', () => {
     c.clear();
     expect(c.size).toBe(0);
     expect(c.get(0)).toBeUndefined();
+  });
+});
+
+describe('studies panel width', () => {
+  it('default 232, dijepit 160..400', () => {
+    expect(clampStudiesWidth(232)).toBe(232);
+    expect(clampStudiesWidth(100)).toBe(160);
+    expect(clampStudiesWidth(900)).toBe(400);
+    expect(clampStudiesWidth(Number.NaN)).toBe(232);
+  });
+
+  it('loadStudiesWidth aman tanpa storage (SSR)', () => {
+    expect(loadStudiesWidth()).toBe(232);
   });
 });

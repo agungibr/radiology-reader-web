@@ -79,6 +79,58 @@ test('resize me-refit saat fit, mempertahankan zoom manual', async ({ page }) =>
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
+test('panel studies: resize, collapse, zoom manual utuh', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  const chest = new URL('./fixtures/sample-chest-pa.dcm', import.meta.url).pathname.replace(
+    /^\//,
+    ''
+  );
+  await page.locator('input[type="file"]').setInputFiles(chest);
+  await page.locator('canvas').first().waitFor({ timeout: 20000 });
+
+  const panelW = async () =>
+    (await page.locator('section[aria-label="Studies"]').boundingBox())?.width ?? 0;
+  const frameW = async () =>
+    (await page.locator('.slim-scroll.relative').boundingBox())?.width ?? 0;
+  const zoomLabel = () => page.locator('.tnum.w-14').first().textContent();
+
+  // Lebar default hemat (220-240px)
+  expect(await panelW()).toBeGreaterThanOrEqual(220);
+  expect(await panelW()).toBeLessThanOrEqual(240);
+
+  // Keyboard resize: 3x panah kiri = -30px
+  await page.getByRole('separator', { name: 'Ubah lebar panel Studies' }).focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  expect(await panelW()).toBeGreaterThanOrEqual(200);
+  expect(await panelW()).toBeLessThanOrEqual(206);
+
+  // Zoom manual lalu collapse: zoom utuh, viewer melebar
+  const box = await page.locator('canvas').boundingBox();
+  if (!box) throw new Error('canvas tanpa ukuran');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, 240);
+  const manual = await zoomLabel();
+  const before = await frameW();
+  await page.getByRole('button', { name: 'Ciutkan panel Studies' }).click();
+  await expect(page.getByRole('button', { name: 'Bentangkan panel Studies' })).toBeVisible();
+  expect(await zoomLabel()).toBe(manual);
+  expect(await frameW()).toBeGreaterThan(before);
+
+  // Expand kembali: lebar keyboard dipertahankan
+  await page.getByRole('button', { name: 'Bentangkan panel Studies' }).click();
+  await expect(page.locator('section[aria-label="Studies"]')).toBeVisible();
+  expect(await panelW()).toBeGreaterThanOrEqual(200);
+  expect(await panelW()).toBeLessThanOrEqual(206);
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+});
+
 test('study info menyalin nilai penuh', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.setViewportSize({ width: 1280, height: 800 });

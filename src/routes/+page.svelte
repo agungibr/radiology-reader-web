@@ -14,13 +14,47 @@
     type DicomTag
   } from '$lib/dicom';
   import { activeFile, type ActiveFile } from '$lib/session';
-  import { SliceCache, clampSliceIndex, groupIntoStudies, type SliceInfo } from '$lib/study';
+  import {
+    SliceCache,
+    clampSliceIndex,
+    clampStudiesWidth,
+    groupIntoStudies,
+    loadStudiesWidth,
+    saveStudiesWidth,
+    type SliceInfo
+  } from '$lib/study';
 
   let files: { name: string; buffer: ArrayBuffer; thumb: string | null }[] = $state([]);
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
   let zoomPct = $state(100);
+  let studiesWidth = $state(loadStudiesWidth());
+  let studiesOpen = $state(true);
+
+  function setStudiesWidth(px: number) {
+    studiesWidth = clampStudiesWidth(px);
+    saveStudiesWidth(studiesWidth);
+  }
+
+  let resizing: { startX: number; startW: number } | null = null;
+
+  /** Seret pembatas untuk mengubah lebar panel Studies (desktop). */
+  function startResize(e: PointerEvent) {
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    resizing = { startX: e.clientX, startW: studiesWidth };
+    const move = (ev: PointerEvent) => {
+      if (!resizing) return;
+      setStudiesWidth(resizing.startW + (ev.clientX - resizing.startX));
+    };
+    const stop = () => {
+      resizing = null;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  }
 
   /** Hasil decode per file agar gulir slice bolak-balik instan (max 5). */
   let sliceCache = new SliceCache<{ entry: ActiveFile; tags: DicomTag[] }>(5);
@@ -308,7 +342,10 @@
 <div class="px-3 py-3">
   <h1 class="sr-only">Browser</h1>
 
-  <div class="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_300px]">
+  <div
+    class="grid gap-3 xl:grid-cols-[var(--studies-w)_minmax(0,1fr)_300px]"
+    style:--studies-w={`${studiesOpen ? studiesWidth : 52}px`}
+  >
     <div class="min-w-0 xl:col-start-2 xl:row-start-1">
       <!-- Viewport -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -393,15 +430,45 @@
       </div>
     </div>
 
-    <div class="min-w-0 xl:row-start-1">
-      <StudiesPanel
-        {studies}
-        totalFiles={files.length}
-        selectedFile={selected}
-        thumbOf={(i) => files[i]?.thumb ?? null}
-        onSelectFile={(i) => void select(i)}
-        onRemoveSeries={(ids) => void removeSeries(ids)}
-      />
+    <div class="relative min-w-0 xl:row-start-1">
+      {#if studiesOpen}
+        <StudiesPanel
+          {studies}
+          totalFiles={files.length}
+          selectedFile={selected}
+          thumbOf={(i) => files[i]?.thumb ?? null}
+          onSelectFile={(i) => void select(i)}
+          onRemoveSeries={(ids) => void removeSeries(ids)}
+          onCollapse={() => (studiesOpen = false)}
+        />
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Ubah lebar panel Studies"
+          aria-valuenow={studiesWidth}
+          aria-valuemin={160}
+          aria-valuemax={400}
+          tabindex="0"
+          title="Seret atau tekan panah untuk mengubah lebar"
+          class="absolute top-0 -right-2 hidden h-full w-3 cursor-ew-resize touch-none xl:block"
+          onpointerdown={startResize}
+          onkeydown={(e) => {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            e.preventDefault();
+            setStudiesWidth(studiesWidth + (e.key === 'ArrowRight' ? 10 : -10));
+          }}
+        ></div>
+      {:else}
+        <button
+          type="button"
+          class="flex min-h-40 w-full items-start justify-center rounded-[12px] border border-white/10 bg-white/[0.02] p-2 text-zinc-500 transition-colors hover:text-zinc-100"
+          aria-label="Bentangkan panel Studies"
+          onclick={() => (studiesOpen = true)}
+        >
+          <ViewerIcon name="chevR" class="h-4 w-4" />
+        </button>
+      {/if}
     </div>
 
     <!-- Info -->
