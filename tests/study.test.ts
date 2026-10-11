@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupIntoStudies, type SliceInfo } from '$lib/study';
+import { clampSliceIndex, groupIntoStudies, SliceCache, type SliceInfo } from '$lib/study';
 
 function slice(over: Partial<SliceInfo> & { name: string }): SliceInfo {
   return {
@@ -55,5 +55,47 @@ describe('groupIntoStudies', () => {
 
   it('mengembalikan list kosong untuk input kosong', () => {
     expect(groupIntoStudies([])).toEqual([]);
+  });
+});
+
+describe('clampSliceIndex', () => {
+  it('menjepit indeks ke rentang stack', () => {
+    expect(clampSliceIndex(-1, 240)).toBe(0);
+    expect(clampSliceIndex(240, 240)).toBe(239);
+    expect(clampSliceIndex(119, 240)).toBe(119);
+  });
+
+  it('nol saat stack kosong', () => {
+    expect(clampSliceIndex(5, 0)).toBe(0);
+  });
+});
+
+describe('SliceCache', () => {
+  it('menyimpan dan mengambil sampai batas', () => {
+    const c = new SliceCache<string>(3);
+    c.set(0, 'a');
+    c.set(1, 'b');
+    c.set(2, 'c');
+    expect(c.get(0)).toBe('a');
+    expect(c.size).toBe(3);
+  });
+
+  it('mengusir yang paling lama tak dipakai', () => {
+    const c = new SliceCache<string>(2);
+    c.set(0, 'a');
+    c.set(1, 'b');
+    c.get(0);
+    c.set(2, 'c');
+    expect(c.get(0)).toBe('a');
+    expect(c.get(1)).toBeUndefined();
+    expect(c.get(2)).toBe('c');
+  });
+
+  it('clear mengosongkan cache', () => {
+    const c = new SliceCache<string>(2);
+    c.set(0, 'a');
+    c.clear();
+    expect(c.size).toBe(0);
+    expect(c.get(0)).toBeUndefined();
   });
 });
