@@ -37,6 +37,50 @@ function pad(n: number): string {
   return String(n).padStart(3, '0');
 }
 
+/** Jepit indeks slice ke rentang stack [0, total). */
+export function clampSliceIndex(index: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(total - 1, Math.max(0, index));
+}
+
+/**
+ * Cache LRU kecil untuk hasil decode slice (indeks file → data).
+ * Indeks file bergeser saat file dihapus, jadi cache dibersihkan
+ * setiap files berubah (lihat pemakaian di halaman Viewer).
+ */
+export class SliceCache<T> {
+  private entries = new Map<number, T>();
+
+  constructor(private maxSize = 5) {}
+
+  get size(): number {
+    return this.entries.size;
+  }
+
+  get(key: number): T | undefined {
+    const value = this.entries.get(key);
+    if (value !== undefined) {
+      this.entries.delete(key);
+      this.entries.set(key, value);
+    }
+    return value;
+  }
+
+  set(key: number, value: T): void {
+    this.entries.delete(key);
+    this.entries.set(key, value);
+    while (this.entries.size > this.maxSize) {
+      const oldest = this.entries.keys().next().value;
+      if (oldest === undefined) break;
+      this.entries.delete(oldest);
+    }
+  }
+
+  clear(): void {
+    this.entries.clear();
+  }
+}
+
 function compareSlices(a: SliceInfo, b: SliceInfo): number {
   const ai = a.instanceNumber;
   const bi = b.instanceNumber;
