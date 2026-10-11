@@ -4,6 +4,7 @@ import {
   defaultWindow,
   extractPixels,
   isDicomBuffer,
+  isImportableImageName,
   listTags,
   parseDicom,
   renderGrayscale
@@ -187,6 +188,33 @@ describe('isDicomBuffer', () => {
     expect(isDicomBuffer(buildDicom())).toBe(true);
     expect(isDicomBuffer(new Uint8Array([1, 2, 3]).buffer as ArrayBuffer)).toBe(false);
   });
+});
+
+describe('isImportableImageName', () => {
+  it.each([
+    'scan.dcm',
+    'SCAN.DCM',
+    'study.dicom',
+    'foto.JPG',
+    'citra.jpeg',
+    'x-ray.png',
+    'arsip.bmp',
+    'slide.tif',
+    'slide.tiff'
+  ])('menerima ekstensi citra yang didukung: %s', (name) => {
+    expect(isImportableImageName(name)).toBe(true);
+  });
+
+  it.each(['STUDY001', '1_2_840_113619', 'scan.'])('menerima nama tanpa ekstensi: %s', (name) => {
+    expect(isImportableImageName(name)).toBe(true);
+  });
+
+  it.each(['catatan.txt', 'aplikasi.exe', 'laporan.pdf', 'arsip.zip', 'cadangan.dcm.bak'])(
+    'menolak ekstensi yang jelas bukan citra: %s',
+    (name) => {
+      expect(isImportableImageName(name)).toBe(false);
+    }
+  );
 });
 
 describe('parseDicom', () => {

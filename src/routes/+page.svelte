@@ -6,6 +6,7 @@
   import {
     extractPixels,
     isDicomBuffer,
+    isImportableImageName,
     listTags,
     parseDicom,
     renderGrayscale,
@@ -180,7 +181,7 @@
       const dir = await w.showDirectoryPicker();
       const picked: File[] = [];
       for await (const entry of dir.values()) {
-        if (entry.kind === 'file' && /\.(dcm|dicom|jpg|jpeg|png|bmp|tif|tiff)$/i.test(entry.name)) {
+        if (entry.kind === 'file' && isImportableImageName(entry.name)) {
           picked.push(await entry.getFile());
         }
       }
@@ -341,11 +342,11 @@
   >
     <ViewerIcon name="image" class="h-3.5 w-3.5" />
     Buka File
+    <!-- Tanpa accept: dialog OS default "All Files" agar DICOM tanpa ekstensi tetap terlihat. -->
     <input
       type="file"
       class="hidden"
       multiple
-      accept=".dcm,.dicom,.jpg,.jpeg,.png,.bmp,.tiff,.tif"
       onchange={(e) => e.currentTarget.files && void addFiles(e.currentTarget.files)}
     />
   </label>

@@ -15,7 +15,6 @@
       | 'image'
       | 'calc'
       | 'history'
-      | 'info'
       | 'folder'
       | 'rotate'
       | 'expand'
@@ -91,9 +90,6 @@
     <line x1="15.5" y1="12" x2="15.5" y2="12.1" /><line x1="8.5" y1="16" x2="15.5" y2="16" />
   {:else if name === 'history'}
     <circle cx="12" cy="12" r="8.5" /><polyline points="12 7.5 12 12 15.5 13.5" />
-  {:else if name === 'info'}
-    <circle cx="12" cy="12" r="8.5" /><line x1="12" y1="11" x2="12" y2="16" />
-    <line x1="12" y1="7.5" x2="12" y2="7.6" />
   {:else if name === 'folder'}
     <path d="M3.5 7a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
   {:else if name === 'rotate'}
