@@ -5,24 +5,41 @@ import { z } from 'zod';
 
 const nonNegativeNullable = z.number().nonnegative().nullable().default(null);
 
-export const calculationInputSchema = z.object({
-  patientId: z.string().default(''),
-  patientName: z.string().default(''),
-  gender: z.string().default(''),
-  age: z.string().default(''),
-  weightKg: nonNegativeNullable,
-  examType: z.string().default(''),
-  view: z.string().default(''),
-  studyDescription: z.string().default(''),
-  bodyPartExamined: z.string().default(''),
-  kvp: z.number({ message: 'kVp harus berupa angka' }).positive('kVp harus lebih dari 0'),
-  ma: z.number({ message: 'mA harus berupa angka' }).positive('mA harus lebih dari 0'),
-  timeS: z.number({ message: 'Waktu harus berupa angka' }).positive('Waktu harus lebih dari 0'),
-  bsf: z.number().positive().default(1.35),
-  coeffA: z.number().positive().default(0.0004),
-  coeffB: z.number().positive().default(2.5917),
-  dapMgyCm2: nonNegativeNullable
-});
+export const calculationInputSchema = z
+  .object({
+    patientId: z.string().default(''),
+    patientName: z.string().default(''),
+    gender: z.string().default(''),
+    age: z.string().default(''),
+    weightKg: nonNegativeNullable,
+    examType: z.string().default(''),
+    view: z.string().default(''),
+    studyDescription: z.string().default(''),
+    bodyPartExamined: z.string().default(''),
+    kvp: z.number({ message: 'kVp harus berupa angka' }).positive('kVp harus lebih dari 0'),
+    ma: z
+      .number({ message: 'mA harus berupa angka' })
+      .positive('mA harus lebih dari 0')
+      .nullable()
+      .default(null),
+    timeS: z
+      .number({ message: 'Waktu harus berupa angka' })
+      .positive('Waktu harus lebih dari 0')
+      .nullable()
+      .default(null),
+    /** mAs langsung (tag DICOM 0018,1152) — pengganti mA × waktu bila tak ada. */
+    masOverride: nonNegativeNullable,
+    bsf: z.number().positive().default(1.35),
+    coeffA: z.number().positive().default(0.0004),
+    coeffB: z.number().positive().default(2.5917),
+    dapMgyCm2: nonNegativeNullable
+  })
+  .refine(
+    (v) =>
+      (v.ma !== null && v.ma > 0 && v.timeS !== null && v.timeS > 0) ||
+      (v.masOverride !== null && v.masOverride > 0),
+    { message: 'Isi mA dan waktu, atau mAs langsung' }
+  );
 
 export type CalculationInput = z.infer<typeof calculationInputSchema>;
 

@@ -54,6 +54,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
       kvp: v.kvp,
       ma: v.ma,
       timeS: v.timeS,
+      masOverride: v.masOverride,
       bsf: v.bsf,
       coeffA: v.coeffA,
       coeffB: v.coeffB

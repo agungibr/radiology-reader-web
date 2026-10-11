@@ -41,8 +41,9 @@ export interface HistoryEntry {
   weightKg: number | null;
   examType: string;
   kvp: number;
-  ma: number;
-  timeS: number;
+  /** null bila kalkulasi memakai mAs langsung (tanpa mA/waktu). */
+  ma: number | null;
+  timeS: number | null;
   mas: number;
   inakMgy: number;
   esakMgy: number;
@@ -64,8 +65,8 @@ export function toExportRow(e: HistoryEntry): ExportRow {
     'BB (kg)': e.weightKg !== null ? e.weightKg.toFixed(1) : '',
     'Jenis Pemeriksaan': e.examType,
     kVp: e.kvp,
-    mA: e.ma,
-    s: e.timeS,
+    mA: e.ma ?? '',
+    s: e.timeS ?? '',
     mAs: e.mas,
     'INAK (mGy)': e.inakMgy,
     'ESAK (mGy)': e.esakMgy,
