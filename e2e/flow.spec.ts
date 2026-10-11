@@ -13,6 +13,7 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
   await expect(page.getByRole('button', { name: /sample-chest-pa\.dcm/ })).toBeVisible();
   await expect(page.getByText('TEST001').first()).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
+  await page.getByRole('button', { name: 'DICOM Tags' }).click();
   await expect(page.getByText(/Total: \d+ tag/)).toBeVisible();
 
   // 2. Dosimetri terisi otomatis dari DICOM
