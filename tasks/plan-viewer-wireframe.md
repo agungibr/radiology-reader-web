@@ -1,6 +1,9 @@
 # Implementation Plan: Viewer Workstation Rebuild (wireframe)
 
-> Status: PROPOSED 2026-10-11. Awaiting human approval — no implementation started.
+> Status: IMPLEMENTED 2026-10-11 on branch `feat/viewer-workstation` (all 4 phases).
+> Deviations: wheel-scroll routing + toolbar Slice controls live in ImageViewer
+> via a `slice` prop (not overlay text); tags expander defaults collapsed with
+> one e2e line updated; series fixtures are 6 tiny files (not 240).
 > Supersedes direction of `plan-viewer-pacs.md` for the `/` route (that plan's
 > PACS tools — toolbar, W/L, ruler, thumbnails, dark island — are kept and reused).
 > `plan.md` / `todo.md` stay untouched (historical record v1).
@@ -358,4 +361,4 @@ Parallel safe: T3 ∥ T1; T8 after T5 only. Everything else sequential
 - [ ] Every task has a verification step — done above
 - [ ] Dependencies ordered; no task touches >5 files — done above
 - [ ] Checkpoints between phases — done above
-- [ ] Human has reviewed and approved this plan — PENDING
+- [x] Human has reviewed and approved this plan — approved full rebuild 2026-10-11
