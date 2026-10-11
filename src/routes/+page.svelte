@@ -1,6 +1,7 @@
 <script lang="ts">
   import ImageViewer from '$components/ImageViewer.svelte';
   import PatientCard from '$components/PatientCard.svelte';
+  import StudiesPanel from '$components/StudiesPanel.svelte';
   import TagsTable from '$components/TagsTable.svelte';
   import ViewerIcon from '$components/ViewerIcon.svelte';
   import {
@@ -197,8 +198,8 @@
 <div class="px-3 py-3">
   <h1 class="sr-only">Browser</h1>
 
-  <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
-    <div class="min-w-0 xl:row-start-1">
+  <div class="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_300px]">
+    <div class="min-w-0 xl:col-start-2 xl:row-start-1">
       <!-- Viewport -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
@@ -275,63 +276,20 @@
       </div>
     </div>
 
-    <!-- Filmstrip -->
-    <section
-      aria-label="Film"
-      class="rounded-[12px] border border-white/10 bg-white/[0.02] p-2 xl:col-span-2 xl:row-start-2"
-    >
-      {#if files.length > 0}
-        <ul class="slim-scroll flex gap-2 overflow-x-auto">
-          {#each files as f, i (f.name + i)}
-            <li class="group relative w-28 shrink-0">
-              <button
-                type="button"
-                onclick={() => void select(i)}
-                class={`block w-full rounded-[8px] border p-1.5 text-left transition-colors ${i === selected ? 'border-blue-500 bg-blue-600/10' : 'border-white/10 hover:border-white/25'}`}
-              >
-                {#if f.thumb}
-                  <img
-                    src={f.thumb}
-                    alt=""
-                    class="h-16 w-full rounded-[5px] bg-black object-cover"
-                  />
-                {:else}
-                  <div
-                    class="flex h-16 w-full items-center justify-center rounded-[5px] bg-black font-mono text-[10px] text-zinc-600"
-                  >
-                    —
-                  </div>
-                {/if}
-                <span class="mt-1 block truncate font-mono text-[11px] text-zinc-200">
-                  {i + 1}: {f.name}
-                </span>
-                <span class="block font-mono text-[10px] text-zinc-500">
-                  {isDicomBuffer(f.buffer) ? 'DICOM' : 'gambar'}
-                </span>
-              </button>
-              <button
-                type="button"
-                class="absolute top-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-300 focus-visible:opacity-100"
-                aria-label={`Hapus file ${i + 1}`}
-                onclick={() => void removeFile(i)}
-              >
-                ✕
-              </button>
-            </li>
-          {/each}
-        </ul>
-      {:else}
-        <p class="p-2 text-xs text-zinc-500">
-          Belum ada file. Buka File/Folder atau seret file ke viewport.
-        </p>
-      {/if}
-    </section>
+    <div class="min-w-0 xl:row-start-1">
+      <StudiesPanel
+        {files}
+        {selected}
+        onSelect={(i) => void select(i)}
+        onRemove={(i) => void removeFile(i)}
+      />
+    </div>
 
     <!-- Info -->
-    <div class="grid content-start gap-3 xl:col-start-2 xl:row-start-1">
+    <div class="grid content-start gap-3 xl:col-start-3 xl:row-start-1">
       <PatientCard metadata={meta} />
     </div>
-    <div class="min-w-0 xl:col-span-2 xl:row-start-3">
+    <div class="min-w-0 xl:col-span-3 xl:row-start-2">
       <TagsTable tags={currentTags} />
     </div>
   </div>
