@@ -41,6 +41,7 @@ npx wrangler pages dev .svelte-kit/cloudflare --d1 DB=radiology-db
 ```bash
 npx wrangler d1 create radiology-db                    # sekali saja
 npx wrangler d1 execute radiology-db --remote --file=./drizzle/0001_init.sql
+npx wrangler d1 execute radiology-db --remote --file=./drizzle/0002_nullable_exposure.sql  # mAs-langsung (B-full)
 ```
 
 Skema + seed DRL (39 baris dari `drl_config.json` desktop): `drizzle/0001_init.sql`.
