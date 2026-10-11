@@ -330,6 +330,8 @@
     <!-- Info -->
     <div class="grid content-start gap-3">
       <PatientCard metadata={meta} />
+    </div>
+    <div class="min-w-0 xl:col-span-2">
       <TagsTable tags={currentTags} />
     </div>
   </div>

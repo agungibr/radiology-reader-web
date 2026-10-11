@@ -1,7 +1,7 @@
 <script lang="ts">
   import ViewerIcon from '$components/ViewerIcon.svelte';
   import { applyWindow, defaultWindow, renderGrayscale } from '$lib/dicom';
-  import { measureDistance } from '$lib/measure';
+  import { MAX_ZOOM, MIN_ZOOM, fitZoom, measureDistance } from '$lib/measure';
 
   /** Alat aktif tunggal ala PACS. */
   export type ViewerTool = 'window' | 'pan' | 'zoom' | 'ruler';
@@ -60,9 +60,6 @@
   let downPx: { x: number; y: number } | null = null;
   let viewW = $state(0);
   let viewH = $state(0);
-
-  const MIN_ZOOM = 0.15;
-  const MAX_ZOOM = 8;
 
   const tools: { id: ViewerTool; label: string }[] = [
     { id: 'window', label: 'Window/Level' },
@@ -173,10 +170,10 @@
     const effW = swap ? image.height : image.width;
     const effH = swap ? image.width : image.height;
     const r = frame.getBoundingClientRect();
-    zoom = Math.min(
-      MAX_ZOOM,
-      Math.max(MIN_ZOOM, Math.min((r.width - 24) / effW, (r.height - 24) / effH))
-    );
+    // Tinggi terukur menipu saat bingkai masih kosong (min-height) —
+    // pakai batas maksimum kotak agar citra langsung terisi penuh.
+    const maxH = parseFloat(getComputedStyle(frame).maxHeight) || r.height;
+    zoom = fitZoom(r.width, maxH, effW, effH);
     offsetX = 0;
     offsetY = 0;
     draw();
@@ -381,7 +378,7 @@
 <div
   bind:this={frame}
   class="slim-scroll relative mt-2 flex items-center justify-center overflow-auto rounded-[12px] border border-white/10 bg-black"
-  style="min-height: 320px; max-height: calc(100dvh - 16rem);"
+  style="min-height: 320px; max-height: calc(100dvh - 12rem);"
 >
   {#if overlay}
     <div class="viewport-overlay pointer-events-none absolute inset-0 z-10 p-2">

@@ -72,7 +72,7 @@
         <p class="p-3 text-center text-xs text-zinc-500">Tidak ada tag yang cocok.</p>
       {/if}
     </div>
-    <div class="mt-2 flex items-center gap-1.5">
+    <div class="mt-2 flex flex-wrap items-center gap-1.5">
       <span class="tnum mr-auto font-mono text-[11px] text-zinc-500">
         Total: {filtered.length} tag
       </span>
