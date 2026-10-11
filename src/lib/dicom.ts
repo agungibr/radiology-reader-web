@@ -29,6 +29,15 @@ export interface DicomMetadata {
   dapMgyCm2: number | null;
   rows: number;
   columns: number;
+  /** StudyInstanceUID (0020,000D); '' bila tak ada. */
+  studyUid: string;
+  /** SeriesInstanceUID (0020,000E); '' bila tak ada. */
+  seriesUid: string;
+  /** SOPInstanceUID (0008,0018); '' bila tak ada. */
+  sopUid: string;
+  seriesNumber: number | null;
+  instanceNumber: number | null;
+  numberOfFrames: number | null;
 }
 
 export interface PixelData {
@@ -86,6 +95,18 @@ function firstFloat(ds: dicomParser.DataSet, tag: string): number | null {
   } catch {
     return null;
   }
+}
+
+/** UID dibersihkan dari padding NUL/spasi di akhir. */
+function uidString(ds: dicomParser.DataSet, tag: string): string {
+  return safeString(ds, tag).replace(/[\0\s]+$/g, '');
+}
+
+/** Integer String (IS): nilai pertama, null bila tak ada/tak valid. */
+function intString(ds: dicomParser.DataSet, tag: string): number | null {
+  const raw = safeString(ds, tag).split('\\')[0]?.trim() ?? '';
+  if (!/^-?\d+$/.test(raw)) return null;
+  return parseInt(raw, 10);
 }
 
 function uint16(ds: dicomParser.DataSet, tag: string): number {
@@ -180,7 +201,13 @@ export function parseDicom(buffer: ArrayBuffer): DicomMetadata {
     mas: masDirect,
     dapMgyCm2: dap,
     rows: uint16(ds, 'x00280010'),
-    columns: uint16(ds, 'x00280011')
+    columns: uint16(ds, 'x00280011'),
+    studyUid: uidString(ds, 'x0020000d'),
+    seriesUid: uidString(ds, 'x0020000e'),
+    sopUid: uidString(ds, 'x00080018'),
+    seriesNumber: intString(ds, 'x00200011'),
+    instanceNumber: intString(ds, 'x00200013'),
+    numberOfFrames: intString(ds, 'x00280008')
   };
 }
 
