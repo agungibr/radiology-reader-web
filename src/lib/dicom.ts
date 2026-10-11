@@ -47,6 +47,23 @@ export interface DicomTag {
   value: string;
 }
 
+/** Ekstensi nama file yang dianggap citra saat impor folder. */
+const IMPORTABLE_EXTENSIONS = new Set(['dcm', 'dicom', 'jpg', 'jpeg', 'png', 'bmp', 'tif', 'tiff']);
+
+/**
+ * true jika nama file layak diimpor: ekstensi citra yang dikenal
+ * (tak sensitif kapital) atau tanpa ekstensi sama sekali — DICOM
+ * tanpa ekstensi dideteksi lewat magic `DICM` saat dibaca.
+ */
+export function isImportableImageName(name: string): boolean {
+  const base = name.split(/[\\/]/).pop() ?? '';
+  const dot = base.lastIndexOf('.');
+  if (dot < 0) return true;
+  const ext = base.slice(dot + 1).toLowerCase();
+  if (ext === '') return true;
+  return IMPORTABLE_EXTENSIONS.has(ext);
+}
+
 /** true jika buffer punya magic "DICM" setelah preamble 128 byte. */
 export function isDicomBuffer(buffer: ArrayBuffer): boolean {
   if (buffer.byteLength < 132) return false;
