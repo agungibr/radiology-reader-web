@@ -37,6 +37,39 @@ function pad(n: number): string {
   return String(n).padStart(3, '0');
 }
 
+/** Lebar default panel Studies (px) — sempit agar viewer lega. */
+export const STUDIES_WIDTH_DEFAULT = 232;
+/** Batas seret panel Studies (px). */
+export const STUDIES_WIDTH_MIN = 160;
+export const STUDIES_WIDTH_MAX = 400;
+const STUDIES_WIDTH_KEY = 'rr-studies-w';
+
+/** Jepit lebar panel ke rentang; non-angka kembali ke default. */
+export function clampStudiesWidth(width: number): number {
+  if (!Number.isFinite(width)) return STUDIES_WIDTH_DEFAULT;
+  return Math.min(STUDIES_WIDTH_MAX, Math.max(STUDIES_WIDTH_MIN, width));
+}
+
+/** Baca lebar tersimpan (default bila storage tak ada/rusak — aman SSR). */
+export function loadStudiesWidth(): number {
+  try {
+    const raw = localStorage.getItem(STUDIES_WIDTH_KEY);
+    if (raw === null) return STUDIES_WIDTH_DEFAULT;
+    return clampStudiesWidth(Number(raw));
+  } catch {
+    return STUDIES_WIDTH_DEFAULT;
+  }
+}
+
+/** Simpan lebar panel; gagal diam-diam bila storage tak tersedia. */
+export function saveStudiesWidth(width: number): void {
+  try {
+    localStorage.setItem(STUDIES_WIDTH_KEY, String(clampStudiesWidth(width)));
+  } catch {
+    // abaikan (mode privat/SSR)
+  }
+}
+
 /** Jepit indeks slice ke rentang stack [0, total). */
 export function clampSliceIndex(index: number, total: number): number {
   if (total <= 0) return 0;
