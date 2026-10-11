@@ -25,8 +25,11 @@
   let timeS: number | null = $state(initial?.exposureTimeS ?? null);
   let bsf = $state(DEFAULT_BSF);
   let dap: number | null = $state(initial?.dapMgyCm2 ?? null);
+  let masManual: number | null = $state(initial?.mas ?? null);
 
   const mas = $derived(ma !== null && timeS !== null ? ma * timeS : null);
+  /** mAs efektif: mA × waktu bila valid, atau mAs manual (tag 0018,1152/ketikan). */
+  const masForCalc = $derived(mas !== null && mas > 0 ? mas : masManual);
   let result = $state<{ inak: number; esak: number; y: number } | null>(null);
   let drl: DrlResult | null = $state(null);
   let notice = $state('');
@@ -36,11 +39,19 @@
     notice = '';
     drl = null;
     result = null;
-    if (kvp === null || kvp <= 0 || ma === null || ma <= 0 || timeS === null || timeS <= 0) {
-      notice = 'kVp, mA, dan waktu harus lebih dari 0.';
+    if (kvp === null || kvp <= 0 || masForCalc === null || masForCalc <= 0) {
+      notice = 'kVp harus lebih dari 0, dan isi mA + waktu atau mAs.';
       return;
     }
-    const dose = calculateInakEsak({ kvp, ma, timeS, bsf, coeffA, coeffB });
+    const dose = calculateInakEsak({
+      kvp,
+      ma,
+      timeS,
+      masOverride: mas !== null && mas > 0 ? null : masForCalc,
+      bsf,
+      coeffA,
+      coeffB
+    });
     result = { inak: dose.inakMgy, esak: dose.esakMgy, y: dose.yMgy };
     drl = assessDrl({
       inak: dose.inakMgy,
@@ -70,6 +81,7 @@
           kvp,
           ma,
           timeS,
+          masOverride: mas !== null && mas > 0 ? null : masForCalc,
           bsf,
           coeffA,
           coeffB,
@@ -119,6 +131,17 @@
       >{mas !== null ? `${mas.toFixed(4)} mAs` : '—'}</span
     >
     <span></span>
+
+    <label for="mas-manual">mAs manual</label>
+    <input
+      id="mas-manual"
+      type="number"
+      class="border px-2 py-1"
+      bind:value={masManual}
+      min="0"
+      step="0.0001"
+    />
+    <span class="text-xs text-zinc-500">Bila mA/waktu kosong</span>
 
     <span>DAP DICOM</span>
     <span class="tnum font-mono font-bold text-zinc-100">
