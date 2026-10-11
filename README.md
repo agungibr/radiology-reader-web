@@ -62,12 +62,13 @@ agar Pages memakai config tersebut).
 
 ## Architecture
 
-- `src/routes/` — Viewer (`/`), Dosimetri (`/dosimetry`), History (`/history`), API (`/api/*`)
+- `src/routes/` — Viewer workstation (`/`), Dosimetri (`/dosimetry`), History (`/history`), API (`/api/*`)
 - `src/lib/` — pure logic + unit tests: `dicom.ts`, `dose.ts`, `drl.ts`,
-  `calibration.ts`, `history.ts`, `validation.ts`, `session.ts`
-- `src/components/` — ImageViewer, ExposureForm, CalibrationTable, DapForm,
-  DrlBadge, DoseEstimateCard, PatientCard, TagsTable, HistoryTable
-- `e2e/fixtures/` — DICOM sintetis anonim + generator (`generate_fixture.py`)
+  `calibration.ts`, `history.ts`, `validation.ts`, `session.ts`, `study.ts`
+- `src/components/` — ImageViewer, StudiesPanel, StudyInfoCard, ExposureForm,
+  CalibrationTable, DapForm, DrlBadge, DoseEstimateCard, PatientCard,
+  TagsTable, HistoryTable
+- `e2e/fixtures/` — DICOM sintetis anonim + generator (`generate_fixture.py`); `series/` multi-series untuk scroll iris
 
 Angka dijamin cocok dengan desktop (golden tests dari Python):
 INAK/ESAK, rantai DAP, regresi kalibrasi, DRL, estimasi mSv — toleransi 1e-9..1e-4.
