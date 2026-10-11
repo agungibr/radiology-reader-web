@@ -15,7 +15,6 @@
 
   const initial = untrack(() => file?.metadata ?? null);
   const meta = $derived(file?.metadata ?? null);
-  const dicomDap = $derived(meta?.dapMgyCm2 ?? null);
 
   let kvp: number | null = $state(initial?.kvp ?? null);
   let ma: number | null = $state(initial?.ma ?? null);
@@ -43,7 +42,7 @@
     drl = assessDrl({
       inak: null,
       esak: null,
-      dap: dicomDap,
+      dap: result.dapMgyCm2,
       studyDescription: meta?.studyDescription ?? '',
       bodyPartExamined: meta?.bodyPartExamined ?? '',
       viewPosition: meta?.viewPosition ?? '',
@@ -123,13 +122,14 @@
 
   {#if drl}
     <div class="mt-3 border-t border-white/10 pt-3 text-sm">
-      <p class="font-semibold">DRL Assessment — DAP DICOM</p>
+      <p class="font-semibold">DRL Assessment — DAP</p>
       {#if drl.matched && drl.metric === 'dap'}
         <p class="text-xs text-zinc-500">
           {drl.examination} | View: {drl.view} | {drl.ageGroupLabel}
         </p>
         <div class="mt-1 flex items-center gap-2">
-          <span class="font-mono">{dicomDap !== null ? `${dicomDap.toFixed(4)} mGy·cm²` : '—'}</span
+          <span class="font-mono"
+            >{result ? `${result.dapMgyCm2.toFixed(4)} mGy·cm²` : '—'}</span
           >
           <span class="text-xs text-zinc-500">/ DRL {drl.drlDap} mGy·cm²</span>
           <DrlBadge status={drl.dapStatus ?? ''} />
@@ -140,9 +140,6 @@
         </p>
       {:else}
         <p class="text-xs text-zinc-500 italic">{drl.message}</p>
-        {#if dicomDap === null}
-          <p class="text-xs text-zinc-500 italic">DAP tidak ada di tag DICOM (0018,115E).</p>
-        {/if}
       {/if}
     </div>
   {/if}
