@@ -27,9 +27,14 @@ export const DAP_REFERENCE_DISTANCE_CM = 100;
 
 export interface InakEsakInput {
   kvp: number;
-  ma: number;
+  ma?: number | null;
   /** Waktu eksposur dalam detik. */
-  timeS: number;
+  timeS?: number | null;
+  /**
+   * mAs langsung (mis. tag DICOM 0018,1152) — dipakai bila ada, jika tidak
+   * dihitung dari mA × waktu. INAK hanya butuh mAs (`y × mAs/1000`).
+   */
+  masOverride?: number | null;
   bsf?: number;
   coeffA?: number;
   coeffB?: number;
@@ -72,17 +77,18 @@ export function calculateInakEsak(input: InakEsakInput): InakEsakResult {
     kvp,
     ma,
     timeS,
+    masOverride = null,
     bsf = DEFAULT_BSF,
     coeffA = DEFAULT_COEFF_A,
     coeffB = DEFAULT_COEFF_B
   } = input;
 
-  const mas = ma * timeS;
+  const mas = masOverride ?? (ma ?? 0) * (timeS ?? 0);
   const yMgy = calculateTubeOutputY(kvp, coeffA, coeffB);
   const inakMgy = yMgy * (mas / 1000);
   const esakMgy = inakMgy * bsf;
 
-  return { kvp, ma, timeS, mas, yMgy, inakMgy, esakMgy, bsf, coeffA, coeffB };
+  return { kvp, ma: ma ?? 0, timeS: timeS ?? 0, mas, yMgy, inakMgy, esakMgy, bsf, coeffA, coeffB };
 }
 
 // ---------------------------------------------------------------------------

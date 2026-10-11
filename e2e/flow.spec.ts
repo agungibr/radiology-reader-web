@@ -18,6 +18,7 @@ const HISTORY_FIELDS = new Set([
   'kvp',
   'ma',
   'timeS',
+  'masOverride',
   'bsf',
   'coeffA',
   'coeffB',
@@ -51,11 +52,15 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
   await page.getByRole('button', { name: 'Hitung INAK dan ESAK' }).click();
   await expect(page.getByText('0.242103 mGy').first()).toBeVisible();
   await expect(page.getByText('Above DRL').first()).toBeVisible();
-  // Preview tanpa D1: hasil tetap tampil + peringatan penyimpanan
-  await page.waitForResponse(
+  // Penyimpanan tergantung D1 lokal: 201 bila ada (tersimpan diam-diam),
+  // 500 + peringatan bila tidak (preview tanpa seed)
+  const saveResp = await page.waitForResponse(
     (r) => r.url().includes('/api/history') && r.request().method() === 'POST'
   );
-  await expect(page.getByText(/tidak tersimpan/)).toBeVisible();
+  expect([201, 500]).toContain(saveResp.status());
+  if (saveResp.status() !== 201) {
+    await expect(page.getByText(/tidak tersimpan/)).toBeVisible();
+  }
   // Privasi: satu POST berisi objek JSON kecil dengan field yang dikenal saja
   expect(posts).toHaveLength(1);
   const body = JSON.parse(posts[0] ?? '{}') as Record<string, unknown>;
@@ -94,6 +99,33 @@ test('raster gagal dimuat menampilkan error dan dapat dipulihkan', async ({ page
   await expect(page.getByText('TEST001').first()).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('mAs langsung setara dengan mA × waktu', async ({ page }) => {
+  const inakText = () =>
+    page.locator('section[aria-label="Parameter eksposur"] p.tnum.text-xl').textContent();
+
+  // Via mA × waktu: 200 × 0.1 = 20 mAs
+  await page.goto('/dosimetry');
+  await page.locator('#kvp').fill('70');
+  await page.locator('#ma').fill('200');
+  await page.locator('#time').fill('0.1');
+  await page.getByRole('button', { name: 'Hitung INAK dan ESAK' }).click();
+  const viaTube = await inakText();
+
+  // Via mAs langsung (mA/waktu kosong — kasus DICOM tanpa tag eksposur)
+  await page.goto('/dosimetry');
+  await page.locator('#kvp').fill('70');
+  await page.locator('#mas-manual').fill('20');
+  const [resp] = await Promise.all([
+    page.waitForResponse(
+      (r) => r.url().includes('/api/history') && r.request().method() === 'POST'
+    ),
+    page.getByRole('button', { name: 'Hitung INAK dan ESAK' }).click()
+  ]);
+  expect(await inakText()).toBe(viaTube);
+  // Server menerima (bukan 400 validasi): 201 dengan D1, 500 tanpa D1 di preview
+  expect(resp.status()).not.toBe(400);
 });
 
 test('toggle DAP mempertahankan nilai eksposur manual', async ({ page }) => {

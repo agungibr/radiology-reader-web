@@ -10,8 +10,8 @@
     weightKg: number | null;
     examType: string;
     kvp: number;
-    ma: number;
-    timeS: number;
+    ma: number | null;
+    timeS: number | null;
     mas: number;
     inakMgy: number;
     esakMgy: number;

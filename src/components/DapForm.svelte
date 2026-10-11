@@ -19,6 +19,7 @@
   let kvp: number | null = $state(initial?.kvp ?? null);
   let ma: number | null = $state(initial?.ma ?? null);
   let timeS: number | null = $state(initial?.exposureTimeS ?? null);
+  let masManual: number | null = $state(initial?.mas ?? null);
   let sid = $state(100);
   let area = $state(625);
   let c1 = $state(DAP_DEFAULT_C1);
@@ -26,6 +27,8 @@
   let c3 = $state(DAP_DEFAULT_C3);
 
   const mas = $derived(ma !== null && timeS !== null ? ma * timeS : null);
+  /** mAs efektif: mA × waktu bila valid, atau mAs manual (tag 0018,1152/ketikan). */
+  const masEffective = $derived(mas !== null && mas > 0 ? mas : masManual);
   let result: DapResult | null = $state(null);
   let drl: DrlResult | null = $state(null);
   let notice = $state('');
@@ -34,11 +37,11 @@
     notice = '';
     result = null;
     drl = null;
-    if (kvp === null || kvp <= 0 || mas === null || mas <= 0) {
-      notice = 'kVp dan mAs harus lebih dari 0.';
+    if (kvp === null || kvp <= 0 || masEffective === null || masEffective <= 0) {
+      notice = 'kVp harus lebih dari 0, dan isi mAs (mA × s atau manual).';
       return;
     }
-    result = calculateDap({ kvp, mas, sidCm: sid, fieldAreaCm2: area, c1, c2, c3 });
+    result = calculateDap({ kvp, mas: masEffective, sidCm: sid, fieldAreaCm2: area, c1, c2, c3 });
     drl = assessDrl({
       inak: null,
       esak: null,
@@ -72,6 +75,15 @@
     />
     <label for="dap-mas">mAs (mA × s)</label>
     <span class="font-mono">{mas !== null ? mas.toFixed(4) : '—'}</span>
+    <label for="dap-mas-manual">mAs manual</label>
+    <input
+      id="dap-mas-manual"
+      type="number"
+      class="border px-2 py-1"
+      bind:value={masManual}
+      min="0"
+      step="0.0001"
+    />
     <label for="dap-sid">SID (cm)</label>
     <input
       id="dap-sid"
@@ -128,9 +140,7 @@
           {drl.examination} | View: {drl.view} | {drl.ageGroupLabel}
         </p>
         <div class="mt-1 flex items-center gap-2">
-          <span class="font-mono"
-            >{result ? `${result.dapMgyCm2.toFixed(4)} mGy·cm²` : '—'}</span
-          >
+          <span class="font-mono">{result ? `${result.dapMgyCm2.toFixed(4)} mGy·cm²` : '—'}</span>
           <span class="text-xs text-zinc-500">/ DRL {drl.drlDap} mGy·cm²</span>
           <DrlBadge status={drl.dapStatus ?? ''} />
         </div>

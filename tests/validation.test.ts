@@ -39,6 +39,16 @@ describe('calculationInputSchema', () => {
     const parsed = calculationInputSchema.safeParse({ ...valid, weightKg: null });
     expect(parsed.success).toBe(true);
   });
+
+  it('menerima mAs langsung tanpa mA dan waktu', () => {
+    const parsed = calculationInputSchema.safeParse({ ...valid, ma: null, timeS: null, masOverride: 10 });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('menolak tanpa mA/waktu maupun mAs', () => {
+    const parsed = calculationInputSchema.safeParse({ ...valid, ma: null, timeS: null });
+    expect(parsed.success).toBe(false);
+  });
 });
 
 describe('drlAssessSchema', () => {

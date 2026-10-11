@@ -301,6 +301,27 @@ sebagai expander `DICOM Tags` (default tertutup).
 - Fixture e2e: `e2e/fixtures/series/` (1 study, 2 series × 3 slice,
   instance diacak untuk membuktikan sort numerik) via `generate_series.py`.
 
+## 14. Kalkulasi mAs Langsung (B-full, divergensi desktop)
+
+Matematika: `INAK = y × (mAs/1000)` hanya butuh mAs — `mA`/`timeS` sekadar
+dikalikan menjadi mAs. File DICOM tanpa tag mA/waktu tetapi punya mAs
+`(0018,1152)` kini bisa dihitung; desktop tetap butuh mA+waktu (divergensi
+disengaja, disetujui pemilik).
+
+- `calculateInakEsak` menerima `masOverride` (dipakai bila ada, atau
+  `mA × waktu`). Validasi: kVp>0 dan (mA+waktu valid atau mAs>0).
+- Form INAK/ESAK + DAP: baris input `mAs manual` (prefill tag 0018,1152),
+  dipakai bila mA/waktu kosong. Riwayat/export menampilkan sel kosong
+  untuk mA/waktu yang tak diketahui (bukan 0).
+- D1 `drizzle/0002_nullable_exposure.sql`: `ma`/`time_s` menjadi nullable
+  via rebuild tabel (SQLite tak mendukung ALTER COLUMN; data dipertahankan).
+  Terapkan lokal DAN remote sebelum deploy versi ini:
+  `npx wrangler d1 execute radiology-db --local --file=./drizzle/0002_nullable_exposure.sql`
+  `npx wrangler d1 execute radiology-db --remote --file=./drizzle/0002_nullable_exposure.sql`
+- Status 2026-10-11: lokal termigrasi + terverifikasi (baris lama utuh,
+  insert NULL mA/time_s OK); **remote PENDING** (CLI mesin ini tak punya
+  akses akun produksi, code 7403).
+
 ## 13. Follow-up UI/UX (review `radiology_reader_ui_ux_followup.md`)
 
 - **Tags dua lapis** (Option A+B): ringkasan sidebar (8 baris pertama, tanpa
