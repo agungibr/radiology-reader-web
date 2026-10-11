@@ -14,12 +14,47 @@
     type DicomTag
   } from '$lib/dicom';
   import { activeFile, type ActiveFile } from '$lib/session';
+  import { groupIntoStudies, type SliceInfo } from '$lib/study';
 
   let files: { name: string; buffer: ArrayBuffer; thumb: string | null }[] = $state([]);
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
   let zoomPct = $state(100);
+
+  /** Ringkasan metadata per file untuk dikelompokkan menjadi Study → Series. */
+  const studies = $derived.by(() => {
+    const infos: SliceInfo[] = files.map((f, i) => {
+      const base: SliceInfo = {
+        name: f.name,
+        fileIndex: i,
+        studyUid: '',
+        seriesUid: '',
+        studyDescription: '',
+        seriesDescription: '',
+        bodyPartExamined: '',
+        seriesNumber: null,
+        instanceNumber: null
+      };
+      if (!isDicomBuffer(f.buffer)) return base;
+      try {
+        const m = parseDicom(f.buffer);
+        return {
+          ...base,
+          studyUid: m.studyUid,
+          seriesUid: m.seriesUid,
+          studyDescription: m.studyDescription,
+          seriesDescription: m.seriesDescription,
+          bodyPartExamined: m.bodyPartExamined,
+          seriesNumber: m.seriesNumber,
+          instanceNumber: m.instanceNumber
+        };
+      } catch {
+        return base;
+      }
+    });
+    return groupIntoStudies(infos);
+  });
 
   async function addFiles(list: FileList | File[]) {
     error = '';
@@ -77,6 +112,19 @@
 
   async function removeFile(i: number) {
     files = files.filter((_, j) => j !== i);
+    if (files.length === 0) {
+      selected = 0;
+      activeFile.set(null);
+      currentTags = [];
+      return;
+    }
+    await select(Math.min(selected, files.length - 1));
+  }
+
+  /** Hapus satu series (satu atau beberapa file sekaligus). */
+  async function removeSeries(indices: number[]) {
+    const gone = new Set(indices);
+    files = files.filter((_, j) => !gone.has(j));
     if (files.length === 0) {
       selected = 0;
       activeFile.set(null);
@@ -278,15 +326,17 @@
 
     <div class="min-w-0 xl:row-start-1">
       <StudiesPanel
-        {files}
-        {selected}
-        onSelect={(i) => void select(i)}
-        onRemove={(i) => void removeFile(i)}
+        {studies}
+        totalFiles={files.length}
+        selectedFile={selected}
+        thumbOf={(i) => files[i]?.thumb ?? null}
+        onSelectFile={(i) => void select(i)}
+        onRemoveSeries={(ids) => void removeSeries(ids)}
       />
     </div>
 
     <!-- Info -->
-    <div class="grid content-start gap-3 xl:col-start-3 xl:row-start-1">
+    <div class="grid min-w-0 content-start gap-3 xl:col-start-3 xl:row-start-1">
       <PatientCard metadata={meta} />
     </div>
     <div class="min-w-0 xl:col-span-3 xl:row-start-2">

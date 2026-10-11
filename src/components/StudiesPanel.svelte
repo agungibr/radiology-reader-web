@@ -1,23 +1,30 @@
 <script lang="ts">
-  import { isDicomBuffer } from '$lib/dicom';
-
-  export interface PanelFile {
-    name: string;
-    buffer: ArrayBuffer;
-    thumb: string | null;
-  }
+  import type { Study } from '$lib/study';
 
   let {
-    files,
-    selected,
-    onSelect,
-    onRemove
+    studies,
+    totalFiles,
+    selectedFile,
+    thumbOf,
+    onSelectFile,
+    onRemoveSeries
   }: {
-    files: PanelFile[];
-    selected: number;
-    onSelect: (i: number) => void;
-    onRemove: (i: number) => void;
+    studies: Study[];
+    totalFiles: number;
+    selectedFile: number;
+    thumbOf: (fileIndex: number) => string | null;
+    onSelectFile: (i: number) => void;
+    onRemoveSeries: (fileIndices: number[]) => void;
   } = $props();
+
+  function firstFileOf(study: Study, seriesKey: string): number | null {
+    const s = study.series.find((x) => x.key === seriesKey);
+    return s?.slices[0]?.fileIndex ?? null;
+  }
+
+  function containsFile(study: Study, fileIndex: number): boolean {
+    return study.series.some((s) => s.slices.some((sl) => sl.fileIndex === fileIndex));
+  }
 </script>
 
 <section
@@ -29,45 +36,79 @@
   >
     Studies
   </h2>
-  {#if files.length > 0}
-    <ul class="slim-scroll mt-1 flex max-h-[60dvh] flex-col gap-1 overflow-y-auto">
-      {#each files as f, i (f.name + i)}
-        <li class="group relative shrink-0">
-          <button
-            type="button"
-            onclick={() => onSelect(i)}
-            class={`flex w-full items-center gap-2 rounded-[8px] border p-1.5 text-left transition-colors ${i === selected ? 'border-blue-500 bg-blue-600/10' : 'border-white/10 hover:border-white/25'}`}
-          >
-            {#if f.thumb}
-              <img
-                src={f.thumb}
-                alt=""
-                class="h-12 w-12 shrink-0 rounded-[5px] bg-black object-cover"
-              />
-            {:else}
-              <div
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[5px] bg-black font-mono text-[10px] text-zinc-600"
-              >
-                —
-              </div>
-            {/if}
+  {#if totalFiles > 0}
+    <ul class="slim-scroll mt-1 flex max-h-[60dvh] flex-col gap-2 overflow-y-auto">
+      {#each studies as study (study.key)}
+        {@const active = containsFile(study, selectedFile)}
+        <li
+          class={`rounded-[8px] border p-1.5 transition-colors ${active ? 'border-blue-500/60 bg-blue-600/5' : 'border-white/10'} flex flex-col gap-1`}
+        >
+          <div class="flex items-center gap-2 px-0.5">
             <span class="min-w-0 flex-1">
-              <span class="block truncate font-mono text-[11px] text-zinc-200">
-                {i + 1}: {f.name}
+              <span class="block truncate text-xs font-semibold text-zinc-100">
+                {study.label}
               </span>
               <span class="block font-mono text-[10px] text-zinc-500">
-                {isDicomBuffer(f.buffer) ? 'DICOM' : 'gambar'}
+                {study.series.length} series · {study.totalImages} images
               </span>
             </span>
-          </button>
-          <button
-            type="button"
-            class="absolute top-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-300 focus-visible:opacity-100"
-            aria-label={`Hapus file ${i + 1}`}
-            onclick={() => onRemove(i)}
-          >
-            ✕
-          </button>
+          </div>
+          <ul class="flex flex-col gap-1">
+            {#each study.series as series (series.key)}
+              {@const target = firstFileOf(study, series.key)}
+              {@const chosen = target !== null && target === selectedFile}
+              {@const thumb = target !== null ? thumbOf(target) : null}
+              <li class="group relative">
+                <button
+                  type="button"
+                  disabled={target === null}
+                  onclick={() => target !== null && onSelectFile(target)}
+                  class={`flex w-full items-center gap-2 rounded-[6px] border p-1.5 text-left transition-colors disabled:opacity-40 ${chosen ? 'border-blue-500 bg-blue-600/10' : 'border-white/10 hover:border-white/25'}`}
+                >
+                  {#if thumb}
+                    <img
+                      src={thumb}
+                      alt=""
+                      class="h-10 w-10 shrink-0 rounded-[5px] bg-black object-cover"
+                    />
+                  {:else}
+                    <div
+                      aria-hidden="true"
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] bg-black font-mono text-[10px] text-zinc-600"
+                    >
+                      —
+                    </div>
+                  {/if}
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-xs font-semibold text-zinc-100">
+                      {series.label}
+                    </span>
+                    <span class="block truncate font-mono text-[10px] text-zinc-500">
+                      {series.description} · {series.slices.length} img
+                    </span>
+                    {#if series.slices.length === 1}
+                      <span class="block truncate font-mono text-[10px] text-zinc-600">
+                        {series.slices[0]?.name ?? ''}
+                      </span>
+                    {/if}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="absolute top-1 right-1 rounded bg-black/70 px-1 font-mono text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-300 focus-visible:opacity-100"
+                  aria-label={`Hapus ${series.label}`}
+                  onclick={() =>
+                    onRemoveSeries(
+                      series.slices
+                        .map((sl) => sl.fileIndex)
+                        .filter((x): x is number => x !== undefined)
+                    )}
+                >
+                  ✕
+                </button>
+              </li>
+            {/each}
+          </ul>
         </li>
       {/each}
     </ul>
