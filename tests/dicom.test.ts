@@ -217,6 +217,42 @@ describe('isImportableImageName', () => {
   );
 });
 
+describe('parseDicom UIDs', () => {
+  const uids: TestElement[] = [
+    [0x0020, 0x000d, 'UI', '1.2.3.4'],
+    [0x0020, 0x000e, 'UI', '1.2.3.4.5'],
+    [0x0008, 0x0018, 'UI', '1.2.3.4.5.6'],
+    [0x0020, 0x0011, 'IS', '2'],
+    [0x0020, 0x0013, 'IS', '120'],
+    [0x0028, 0x0008, 'IS', '1']
+  ];
+
+  it('membaca UID studi/series/SOP dan nomor series/instance', () => {
+    const m = parseDicom(fixture(uids));
+    expect(m.studyUid).toBe('1.2.3.4');
+    expect(m.seriesUid).toBe('1.2.3.4.5');
+    expect(m.sopUid).toBe('1.2.3.4.5.6');
+    expect(m.seriesNumber).toBe(2);
+    expect(m.instanceNumber).toBe(120);
+    expect(m.numberOfFrames).toBe(1);
+  });
+
+  it('kosong/null saat tag tidak ada', () => {
+    const m = parseDicom(fixture());
+    expect(m.studyUid).toBe('');
+    expect(m.seriesUid).toBe('');
+    expect(m.sopUid).toBe('');
+    expect(m.seriesNumber).toBeNull();
+    expect(m.instanceNumber).toBeNull();
+    expect(m.numberOfFrames).toBeNull();
+  });
+
+  it('null untuk IS yang tidak valid', () => {
+    const m = parseDicom(fixture([[0x0020, 0x0013, 'IS', 'ABC']]));
+    expect(m.instanceNumber).toBeNull();
+  });
+});
+
 describe('parseDicom', () => {
   it.each([
     ['000Y', '0'],

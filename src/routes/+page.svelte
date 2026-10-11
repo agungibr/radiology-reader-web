@@ -1,6 +1,7 @@
 <script lang="ts">
   import ImageViewer from '$components/ImageViewer.svelte';
   import PatientCard from '$components/PatientCard.svelte';
+  import StudiesPanel from '$components/StudiesPanel.svelte';
   import TagsTable from '$components/TagsTable.svelte';
   import ViewerIcon from '$components/ViewerIcon.svelte';
   import {
@@ -13,12 +14,50 @@
     type DicomTag
   } from '$lib/dicom';
   import { activeFile, type ActiveFile } from '$lib/session';
+  import { SliceCache, clampSliceIndex, groupIntoStudies, type SliceInfo } from '$lib/study';
 
   let files: { name: string; buffer: ArrayBuffer; thumb: string | null }[] = $state([]);
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
   let zoomPct = $state(100);
+
+  /** Hasil decode per file agar gulir slice bolak-balik instan (max 5). */
+  let sliceCache = new SliceCache<{ entry: ActiveFile; tags: DicomTag[] }>(5);
+
+  /** Ringkasan metadata per file untuk dikelompokkan menjadi Study → Series. */
+  const studies = $derived.by(() => {
+    const infos: SliceInfo[] = files.map((f, i) => {
+      const base: SliceInfo = {
+        name: f.name,
+        fileIndex: i,
+        studyUid: '',
+        seriesUid: '',
+        studyDescription: '',
+        seriesDescription: '',
+        bodyPartExamined: '',
+        seriesNumber: null,
+        instanceNumber: null
+      };
+      if (!isDicomBuffer(f.buffer)) return base;
+      try {
+        const m = parseDicom(f.buffer);
+        return {
+          ...base,
+          studyUid: m.studyUid,
+          seriesUid: m.seriesUid,
+          studyDescription: m.studyDescription,
+          seriesDescription: m.seriesDescription,
+          bodyPartExamined: m.bodyPartExamined,
+          seriesNumber: m.seriesNumber,
+          instanceNumber: m.instanceNumber
+        };
+      } catch {
+        return base;
+      }
+    });
+    return groupIntoStudies(infos);
+  });
 
   async function addFiles(list: FileList | File[]) {
     error = '';
@@ -75,7 +114,22 @@
   }
 
   async function removeFile(i: number) {
+    sliceCache.clear();
     files = files.filter((_, j) => j !== i);
+    if (files.length === 0) {
+      selected = 0;
+      activeFile.set(null);
+      currentTags = [];
+      return;
+    }
+    await select(Math.min(selected, files.length - 1));
+  }
+
+  /** Hapus satu series (satu atau beberapa file sekaligus). */
+  async function removeSeries(indices: number[]) {
+    const gone = new Set(indices);
+    sliceCache.clear();
+    files = files.filter((_, j) => !gone.has(j));
     if (files.length === 0) {
       selected = 0;
       activeFile.set(null);
@@ -95,6 +149,12 @@
       activeFile.set(null);
       return;
     }
+    const hit = sliceCache.get(i);
+    if (hit) {
+      activeFile.set(hit.entry);
+      currentTags = hit.tags;
+      return;
+    }
     try {
       if (isDicomBuffer(f.buffer)) {
         const metadata = parseDicom(f.buffer);
@@ -112,13 +172,16 @@
           raw: px.raw,
           invertPixels: px.invert
         };
+        const tags = listTags(f.buffer);
         activeFile.set(entry);
-        currentTags = listTags(f.buffer);
+        currentTags = tags;
+        sliceCache.set(i, { entry, tags });
       } else {
         const entry = await loadRaster(f);
         if (files[selected] === f) {
           activeFile.set(entry);
           currentTags = [];
+          sliceCache.set(i, { entry, tags: [] });
         }
       }
     } catch (e) {
@@ -127,6 +190,34 @@
       currentTags = [];
       error = e instanceof Error ? e.message : `Gagal memuat ${f.name}`;
     }
+  }
+
+  /** Series aktif berisi file terpilih (null bila tak ada file). */
+  const activeSeries = $derived.by(() => {
+    for (const st of studies)
+      for (const s of st.series) if (s.slices.some((sl) => sl.fileIndex === selected)) return s;
+    return null;
+  });
+
+  let sliceIdx = $state(0);
+
+  $effect(() => {
+    const s = activeSeries;
+    if (!s) {
+      sliceIdx = 0;
+      return;
+    }
+    const pos = s.slices.findIndex((sl) => sl.fileIndex === selected);
+    sliceIdx = pos < 0 ? 0 : pos;
+  });
+
+  /** Pindah slice dalam series aktif (wheel, tombol, keyboard). */
+  async function moveSlice(dir: 1 | -1) {
+    const s = activeSeries;
+    if (!s || s.slices.length < 2) return;
+    const target = s.slices[clampSliceIndex(sliceIdx + dir, s.slices.length)]?.fileIndex;
+    if (target === undefined || target === selected) return;
+    await select(target);
   }
 
   async function loadRaster(f: { name: string; buffer: ArrayBuffer }): Promise<ActiveFile> {
@@ -194,11 +285,22 @@
   }
 </script>
 
+<svelte:window
+  onkeydown={(e) => {
+    const t = e.target as HTMLElement | null;
+    if (!t || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || e.isComposing) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      void moveSlice(e.key === 'ArrowDown' ? 1 : -1);
+    }
+  }}
+/>
+
 <div class="px-3 py-3">
   <h1 class="sr-only">Browser</h1>
 
-  <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
-    <div class="min-w-0 xl:row-start-1">
+  <div class="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_300px]">
+    <div class="min-w-0 xl:col-start-2 xl:row-start-1">
       <!-- Viewport -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
@@ -220,6 +322,13 @@
             winWw = w;
             winWl = l;
           }}
+          slice={activeSeries && activeSeries.slices.length > 1
+            ? {
+                index: sliceIdx,
+                total: activeSeries.slices.length,
+                onMove: (d) => void moveSlice(d)
+              }
+            : null}
           {fileActions}
         >
           {#snippet overlay()}
@@ -275,63 +384,22 @@
       </div>
     </div>
 
-    <!-- Filmstrip -->
-    <section
-      aria-label="Film"
-      class="rounded-[12px] border border-white/10 bg-white/[0.02] p-2 xl:col-span-2 xl:row-start-2"
-    >
-      {#if files.length > 0}
-        <ul class="slim-scroll flex gap-2 overflow-x-auto">
-          {#each files as f, i (f.name + i)}
-            <li class="group relative w-28 shrink-0">
-              <button
-                type="button"
-                onclick={() => void select(i)}
-                class={`block w-full rounded-[8px] border p-1.5 text-left transition-colors ${i === selected ? 'border-blue-500 bg-blue-600/10' : 'border-white/10 hover:border-white/25'}`}
-              >
-                {#if f.thumb}
-                  <img
-                    src={f.thumb}
-                    alt=""
-                    class="h-16 w-full rounded-[5px] bg-black object-cover"
-                  />
-                {:else}
-                  <div
-                    class="flex h-16 w-full items-center justify-center rounded-[5px] bg-black font-mono text-[10px] text-zinc-600"
-                  >
-                    —
-                  </div>
-                {/if}
-                <span class="mt-1 block truncate font-mono text-[11px] text-zinc-200">
-                  {i + 1}: {f.name}
-                </span>
-                <span class="block font-mono text-[10px] text-zinc-500">
-                  {isDicomBuffer(f.buffer) ? 'DICOM' : 'gambar'}
-                </span>
-              </button>
-              <button
-                type="button"
-                class="absolute top-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-300 focus-visible:opacity-100"
-                aria-label={`Hapus file ${i + 1}`}
-                onclick={() => void removeFile(i)}
-              >
-                ✕
-              </button>
-            </li>
-          {/each}
-        </ul>
-      {:else}
-        <p class="p-2 text-xs text-zinc-500">
-          Belum ada file. Buka File/Folder atau seret file ke viewport.
-        </p>
-      {/if}
-    </section>
+    <div class="min-w-0 xl:row-start-1">
+      <StudiesPanel
+        {studies}
+        totalFiles={files.length}
+        selectedFile={selected}
+        thumbOf={(i) => files[i]?.thumb ?? null}
+        onSelectFile={(i) => void select(i)}
+        onRemoveSeries={(ids) => void removeSeries(ids)}
+      />
+    </div>
 
     <!-- Info -->
-    <div class="grid content-start gap-3 xl:col-start-2 xl:row-start-1">
+    <div class="grid min-w-0 content-start gap-3 xl:col-start-3 xl:row-start-1">
       <PatientCard metadata={meta} />
     </div>
-    <div class="min-w-0 xl:col-span-2 xl:row-start-3">
+    <div class="min-w-0 xl:col-span-3 xl:row-start-2">
       <TagsTable tags={currentTags} />
     </div>
   </div>

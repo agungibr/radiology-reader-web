@@ -23,7 +23,8 @@
     onZoom,
     onWindow,
     overlay,
-    fileActions
+    fileActions,
+    slice = null
   }: {
     image: { data: Uint8ClampedArray; width: number; height: number } | null;
     rawPixels?: Float64Array | null;
@@ -34,6 +35,7 @@
     onWindow?: (ww: number, wl: number) => void;
     overlay?: import('svelte').Snippet;
     fileActions?: import('svelte').Snippet;
+    slice?: { index: number; total: number; onMove: (dir: 1 | -1) => void } | null;
   } = $props();
 
   let canvas: HTMLCanvasElement | null = $state(null);
@@ -181,6 +183,11 @@
 
   function onWheel(e: WheelEvent) {
     e.preventDefault();
+    // Series multi-slice: wheel menggulir iris (Ctrl+wheel tetap zoom).
+    if (slice && !e.ctrlKey) {
+      slice.onMove(e.deltaY > 0 ? 1 : -1);
+      return;
+    }
     zoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15);
   }
 
@@ -303,6 +310,32 @@
   <span class="tnum w-14 text-center font-mono text-xs text-zinc-300"
     >{image ? `${Math.round(zoom * 100)}%` : '—'}</span
   >
+  {#if slice}
+    <span class="mx-1 h-5 w-px bg-white/10" aria-hidden="true"></span>
+    <button
+      type="button"
+      class="rounded-[5px] px-1.5 py-1 font-mono text-xs text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40"
+      title="Iris sebelumnya"
+      aria-label="Iris sebelumnya"
+      disabled={!image}
+      onclick={() => slice.onMove(-1)}
+    >
+      ‹
+    </button>
+    <span class="tnum text-center font-mono text-xs text-zinc-300"
+      >Slice {slice.index + 1}/{slice.total}</span
+    >
+    <button
+      type="button"
+      class="rounded-[5px] px-1.5 py-1 font-mono text-xs text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:opacity-40"
+      title="Iris berikutnya"
+      aria-label="Iris berikutnya"
+      disabled={!image}
+      onclick={() => slice.onMove(1)}
+    >
+      ›
+    </button>
+  {/if}
   <span class="mx-1 h-5 w-px bg-white/10" aria-hidden="true"></span>
   <button
     type="button"
