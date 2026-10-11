@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ViewerIcon from '$components/ViewerIcon.svelte';
   import type { Study } from '$lib/study';
 
   let {
@@ -7,7 +8,8 @@
     selectedFile,
     thumbOf,
     onSelectFile,
-    onRemoveSeries
+    onRemoveSeries,
+    onCollapse
   }: {
     studies: Study[];
     totalFiles: number;
@@ -15,6 +17,7 @@
     thumbOf: (fileIndex: number) => string | null;
     onSelectFile: (i: number) => void;
     onRemoveSeries: (fileIndices: number[]) => void;
+    onCollapse: () => void;
   } = $props();
 
   function firstFileOf(study: Study, seriesKey: string): number | null {
@@ -31,11 +34,20 @@
   class="min-w-0 rounded-[12px] border border-white/10 bg-white/[0.02] p-2"
   aria-label="Studies"
 >
-  <h2
-    class="px-1.5 pt-1 font-mono text-[10px] font-semibold tracking-widest text-zinc-500 uppercase"
-  >
-    Studies
-  </h2>
+  <div class="flex items-center gap-1 px-1.5 pt-1">
+    <h2 class="flex-1 font-mono text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
+      Studies
+    </h2>
+    <button
+      type="button"
+      class="rounded-[5px] p-1 text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-100"
+      aria-label="Ciutkan panel Studies"
+      title="Ciutkan panel Studies"
+      onclick={onCollapse}
+    >
+      <ViewerIcon name="chevL" class="h-3.5 w-3.5" />
+    </button>
+  </div>
   {#if totalFiles > 0}
     <ul class="slim-scroll mt-1 flex max-h-[60dvh] flex-col gap-2 overflow-y-auto">
       {#each studies as study (study.key)}
