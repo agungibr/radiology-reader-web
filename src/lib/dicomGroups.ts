@@ -5,8 +5,10 @@
 import type { DicomTag } from './dicom';
 
 export interface NamedDicomTag extends DicomTag {
-  /** Nama tampilan; tag tak dikenal memakai hex "XXXX,XXXX". */
+  /** Nama tampilan; tag tak dikenal memakai label jujur (bukan hex). */
   name: string;
+  /** true bila nama berasal dari kamus; false untuk Unknown/Private. */
+  known: boolean;
 }
 
 /** Peta hex (8 char, tanpa koma) → nama tampilan kamus DICOM. */
@@ -49,9 +51,13 @@ const KNOWN: Record<string, string> = {
   '00281051': 'Window Width'
 };
 
-/** Nama tampilan; tag tak dikenal memakai hex "XXXX,XXXX". */
+/** Nama tampilan; tag tak dikenal dilabeli jujur (Unknown/Private). */
 export function nameDicomTag(t: DicomTag): NamedDicomTag {
-  return { ...t, name: KNOWN[t.tag] ?? `${t.tag.slice(0, 4)},${t.tag.slice(4)}` };
+  const known = KNOWN[t.tag];
+  if (known !== undefined) return { ...t, name: known, known: true };
+  const group = parseInt(t.tag.slice(0, 4), 16);
+  const isPrivate = Number.isFinite(group) && group % 2 === 1;
+  return { ...t, name: isPrivate ? 'Private tag' : 'Unknown tag', known: false };
 }
 
 /**
