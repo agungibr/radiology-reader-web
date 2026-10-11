@@ -103,4 +103,30 @@ describe('toExportRow', () => {
     expect(row['DAP (mGy·cm²)']).toBe('');
     expect(row['Hasil DRL']).toBe('Above DRL');
   });
+
+  it('mA/waktu kosong (kalkulasi mAs langsung) diekspor sebagai string kosong', () => {
+    const row = toExportRow({
+      no: 2,
+      patientId: '',
+      patientName: '',
+      gender: '',
+      age: '',
+      weightKg: null,
+      examType: '',
+      kvp: 70,
+      ma: null,
+      timeS: null,
+      mas: 20,
+      inakMgy: 0.484206,
+      esakMgy: 0.653679,
+      dapMgyCm2: null,
+      drlLimitText: '',
+      drlStatus: ''
+    });
+
+    expect(Object.keys(row)).toHaveLength(16);
+    expect(row['mA']).toBe('');
+    expect(row['s']).toBe('');
+    expect(row['mAs']).toBe(20);
+  });
 });

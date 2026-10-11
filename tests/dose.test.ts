@@ -33,6 +33,21 @@ describe('calculateInakEsak', () => {
     expect(() => calculateInakEsak({ kvp: 0, ma: 200, timeS: 0.05 })).toThrow();
     expect(() => calculateInakEsak({ kvp: -70, ma: 200, timeS: 0.05 })).toThrow();
   });
+
+  it('mAs langsung setara dengan mA × waktu', () => {
+    const viaOverride = calculateInakEsak({ kvp: 70, masOverride: 10 });
+
+    expect(viaOverride.mas).toBeCloseTo(10.0, 9);
+    expect(viaOverride.inakMgy).toBeCloseTo(0.2421032289123948, 9);
+    expect(viaOverride.esakMgy).toBeCloseTo(0.326839359031733, 9);
+  });
+
+  it('override null kembali ke mA × waktu', () => {
+    const result = calculateInakEsak({ kvp: 70, ma: 200, timeS: 0.05, masOverride: null });
+
+    expect(result.mas).toBeCloseTo(10.0, 9);
+    expect(result.inakMgy).toBeCloseTo(0.2421032289123948, 9);
+  });
 });
 
 describe('calculateDap', () => {
