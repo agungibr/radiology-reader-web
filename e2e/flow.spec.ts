@@ -5,8 +5,34 @@ const FIXTURE = new URL('./fixtures/sample-chest-pa.dcm', import.meta.url).pathn
   ''
 );
 
+const HISTORY_FIELDS = new Set([
+  'patientId',
+  'patientName',
+  'gender',
+  'age',
+  'weightKg',
+  'examType',
+  'view',
+  'studyDescription',
+  'bodyPartExamined',
+  'kvp',
+  'ma',
+  'timeS',
+  'bsf',
+  'coeffA',
+  'coeffB',
+  'dapMgyCm2'
+]);
+
 test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page }) => {
   await page.goto('/');
+
+  // Intersepsi POST history: payload hanya angka + metadata (tanpa byte citra)
+  const posts: string[] = [];
+  await page.route('**/api/history', async (route) => {
+    if (route.request().method() === 'POST') posts.push(route.request().postData() ?? '');
+    await route.continue();
+  });
 
   // 1. Unggah fixture
   await page.locator('input[type="file"]').setInputFiles(FIXTURE);
@@ -30,6 +56,11 @@ test('alur kritis: unggah DICOM → hitung INAK → badge DRL', async ({ page })
     (r) => r.url().includes('/api/history') && r.request().method() === 'POST'
   );
   await expect(page.getByText(/tidak tersimpan/)).toBeVisible();
+  // Privasi: satu POST berisi objek JSON kecil dengan field yang dikenal saja
+  expect(posts).toHaveLength(1);
+  const body = JSON.parse(posts[0] ?? '{}') as Record<string, unknown>;
+  expect(Object.keys(body).every((k) => HISTORY_FIELDS.has(k))).toBe(true);
+  expect(JSON.stringify(body).length).toBeLessThan(4096);
 
   // 4. Toggle DAP (hidden by default seperti desktop)
   await expect(page.getByRole('button', { name: 'Hitung DAP' })).not.toBeVisible();

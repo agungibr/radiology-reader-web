@@ -37,3 +37,59 @@ test('study 2 series: tree, pilih series, gulir slice', async ({ page }) => {
   );
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test('resize me-refit saat fit, mempertahankan zoom manual', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  const chest = new URL('./fixtures/sample-chest-pa.dcm', import.meta.url).pathname.replace(
+    /^\//,
+    ''
+  );
+  await page.locator('input[type="file"]').setInputFiles(chest);
+  await page.locator('canvas').first().waitFor({ timeout: 20000 });
+
+  const zoomLabel = () => page.locator('.tnum.w-14').first().textContent();
+  const contained = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector('canvas');
+      const frame = document.querySelector('.slim-scroll.relative');
+      if (!canvas || !frame) return false;
+      const c = canvas.getBoundingClientRect();
+      const f = frame.getBoundingClientRect();
+      return c.left >= f.left - 2 && c.right <= f.right + 2;
+    });
+
+  // Mode fit: resize menyusun ulang agar citra tetap muat
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await expect.poll(() => contained(), { timeout: 5000 }).toBe(true);
+
+  // Mode manual: resize tidak me-reset zoom pengguna
+  const box = await page.locator('canvas').boundingBox();
+  if (!box) throw new Error('canvas tanpa ukuran');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, 240);
+  const manual = await zoomLabel();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(500);
+  expect(await zoomLabel()).toBe(manual);
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test('study info menyalin nilai penuh', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  const long = new URL('./fixtures/sample-long-strings.dcm', import.meta.url).pathname.replace(
+    /^\//,
+    ''
+  );
+  await page.locator('input[type="file"]').setInputFiles(long);
+  await page.locator('canvas').first().waitFor({ timeout: 20000 });
+
+  await page.getByRole('button', { name: /Salin Series/ }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('SANGAT PANJANG');
+});
