@@ -62,12 +62,6 @@
         </a>
       {/each}
     </nav>
-    <span
-      class={`mt-auto hidden items-center gap-2.5 px-2.5 py-2 text-sm text-zinc-500 md:flex ${collapsed ? 'md:justify-center md:px-2' : ''}`}
-    >
-      <ViewerIcon name="info" class="h-4 w-4 shrink-0" />
-      <span class={`hidden ${collapsed ? '' : 'md:inline'}`}>Tentang Aplikasi</span>
-    </span>
   </aside>
 
   <div class="flex min-w-0 flex-1 flex-col">
