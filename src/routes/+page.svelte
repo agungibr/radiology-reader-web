@@ -14,13 +14,16 @@
     type DicomTag
   } from '$lib/dicom';
   import { activeFile, type ActiveFile } from '$lib/session';
-  import { groupIntoStudies, type SliceInfo } from '$lib/study';
+  import { SliceCache, clampSliceIndex, groupIntoStudies, type SliceInfo } from '$lib/study';
 
   let files: { name: string; buffer: ArrayBuffer; thumb: string | null }[] = $state([]);
   let selected = $state(0);
   let error = $state('');
   let dragging = $state(false);
   let zoomPct = $state(100);
+
+  /** Hasil decode per file agar gulir slice bolak-balik instan (max 5). */
+  let sliceCache = new SliceCache<{ entry: ActiveFile; tags: DicomTag[] }>(5);
 
   /** Ringkasan metadata per file untuk dikelompokkan menjadi Study → Series. */
   const studies = $derived.by(() => {
@@ -111,6 +114,7 @@
   }
 
   async function removeFile(i: number) {
+    sliceCache.clear();
     files = files.filter((_, j) => j !== i);
     if (files.length === 0) {
       selected = 0;
@@ -124,6 +128,7 @@
   /** Hapus satu series (satu atau beberapa file sekaligus). */
   async function removeSeries(indices: number[]) {
     const gone = new Set(indices);
+    sliceCache.clear();
     files = files.filter((_, j) => !gone.has(j));
     if (files.length === 0) {
       selected = 0;
@@ -144,6 +149,12 @@
       activeFile.set(null);
       return;
     }
+    const hit = sliceCache.get(i);
+    if (hit) {
+      activeFile.set(hit.entry);
+      currentTags = hit.tags;
+      return;
+    }
     try {
       if (isDicomBuffer(f.buffer)) {
         const metadata = parseDicom(f.buffer);
@@ -161,13 +172,16 @@
           raw: px.raw,
           invertPixels: px.invert
         };
+        const tags = listTags(f.buffer);
         activeFile.set(entry);
-        currentTags = listTags(f.buffer);
+        currentTags = tags;
+        sliceCache.set(i, { entry, tags });
       } else {
         const entry = await loadRaster(f);
         if (files[selected] === f) {
           activeFile.set(entry);
           currentTags = [];
+          sliceCache.set(i, { entry, tags: [] });
         }
       }
     } catch (e) {
@@ -176,6 +190,34 @@
       currentTags = [];
       error = e instanceof Error ? e.message : `Gagal memuat ${f.name}`;
     }
+  }
+
+  /** Series aktif berisi file terpilih (null bila tak ada file). */
+  const activeSeries = $derived.by(() => {
+    for (const st of studies)
+      for (const s of st.series) if (s.slices.some((sl) => sl.fileIndex === selected)) return s;
+    return null;
+  });
+
+  let sliceIdx = $state(0);
+
+  $effect(() => {
+    const s = activeSeries;
+    if (!s) {
+      sliceIdx = 0;
+      return;
+    }
+    const pos = s.slices.findIndex((sl) => sl.fileIndex === selected);
+    sliceIdx = pos < 0 ? 0 : pos;
+  });
+
+  /** Pindah slice dalam series aktif (wheel, tombol, keyboard). */
+  async function moveSlice(dir: 1 | -1) {
+    const s = activeSeries;
+    if (!s || s.slices.length < 2) return;
+    const target = s.slices[clampSliceIndex(sliceIdx + dir, s.slices.length)]?.fileIndex;
+    if (target === undefined || target === selected) return;
+    await select(target);
   }
 
   async function loadRaster(f: { name: string; buffer: ArrayBuffer }): Promise<ActiveFile> {
@@ -243,6 +285,17 @@
   }
 </script>
 
+<svelte:window
+  onkeydown={(e) => {
+    const t = e.target as HTMLElement | null;
+    if (!t || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || e.isComposing) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      void moveSlice(e.key === 'ArrowDown' ? 1 : -1);
+    }
+  }}
+/>
+
 <div class="px-3 py-3">
   <h1 class="sr-only">Browser</h1>
 
@@ -269,6 +322,13 @@
             winWw = w;
             winWl = l;
           }}
+          slice={activeSeries && activeSeries.slices.length > 1
+            ? {
+                index: sliceIdx,
+                total: activeSeries.slices.length,
+                onMove: (d) => void moveSlice(d)
+              }
+            : null}
           {fileActions}
         >
           {#snippet overlay()}
