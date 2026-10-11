@@ -6,7 +6,7 @@
 
 SvelteKit 2 + Svelte 5 (runes) + TS strict + Tailwind 4 + adapter-cloudflare.
 DICOM in browser (`dicom-parser`), D1 via `drizzle-orm`, `zod`, `xlsx` server-only.
-Live: https://radiology-reader-web-bkw.pages.dev. No OCR (intentional).
+Live: https://radiologi.purwarupa.net. No OCR (intentional).
 
 ## Commands
 
