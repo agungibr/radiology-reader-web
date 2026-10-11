@@ -265,9 +265,13 @@ Example:
 
 ## 11. Live Environment (per 2026-09-16)
 
-- App: https://radiology-reader-web-bkw.pages.dev (akun `agungmalik050@gmail.com`).
+- App: https://radiologi.purwarupa.net (domain kustom; sebelumnya
+  `radiology-reader-web-bkw.pages.dev`, akun `agungmalik050@gmail.com`).
   URL lama `radiology-reader-web.pages.dev` milik akun lain (jangan dipakai).
 - D1 `radiology-db` (`9ef72a08-e6ef-45cc-8c37-51d77378bb52`), seed 39 baris DRL.
+  Migrasi `0002` (ma/time_s nullable, untuk kalkulasi mAs-langsung) sudah
+  diterapkan lokal + terverifikasi; **remote PENDING** — terapkan sebelum
+  deploy versi berkode `0002`, atau history mAs-langsung gagal tersimpan.
 - Deploy: Git Pages ditiadakan — deploy via CLI `npm run build` + `wrangler pages deploy --branch=main`
   (kolom Deploy/Version dashboard harus netral: `true`, karena perintah Workers ditolak di proyek Pages).
 - `wrangler` CLI tetap v3; `@cloudflare/workers-types` di-pin v4 (v5 merusak `npm ci` — ERESOLVE vs peer wrangler 3).
@@ -300,6 +304,32 @@ sebagai expander `DICOM Tags` (default tertutup).
   dosimetri/history); Series + Study aktif ditampilkan.
 - Fixture e2e: `e2e/fixtures/series/` (1 study, 2 series × 3 slice,
   instance diacak untuk membuktikan sort numerik) via `generate_series.py`.
+- **Studies sidebar**: default 232px (160–400 via seret/keyboard, tersimpan di
+  `localStorage`) + collapse ke rel 52px; grid mengikuti variabel sehingga
+  viewer menerima ruang yang dibebaskan; zoom manual dipertahankan.
+- **Kamus tag 62 entri** (UID, nomor, tanggal, rescale, perangkat); sisanya
+  berlabel jujur `Unknown/Private tag`.
+
+## 13. Follow-up UI/UX (review `radiology_reader_ui_ux_followup.md`)
+
+- **Tags dua lapis** (Option A+B): ringkasan sidebar (8 baris pertama, tanpa
+  cari/paginasi, + Total + tombol duplex `Open/Tutup full inspector`) dan
+  inspector full-width (kolom Tag ID | Nama | VR | Nilai, lebar kolom tetap,
+  nilai ellipsis + tooltip `title`, paginasi satu baris + pilihan 15/25/50/100
+  per halaman, header sticky, cari tetap di atas).
+- **Nama jujur**: kamus bila dikenal; `Unknown tag` (grup genap) /
+  `Private tag` (grup ganjil) bila tidak — tidak mengarang label.
+- **Kebijakan zoom**: refit otomatis saat layout berubah (buka/tutup panel,
+  resize) kecuali zoom manual/1:1 (`userZoomed`, Reset mengembalikan);
+  label zoom selalu sama dengan status render.
+- **Study info**: nilai penuh via klik-salin (keyboard-accessible) + tooltip;
+  Patient ID mask penuh (nilai asli tetap dipakai dosimetri).
+- **Privasi**: e2e mencegat POST `/api/history` — payload hanya 16 field
+  skalar <4KB (tanpa byte citra).
+- Deviasi dari dokumen review: ringkasan sidebar tanpa kolom cari (satu
+  pencarian di inspector agar tak split-brain); tanpa expand-per-baris
+  (title + DOM penuh untuk AT); panel Studies resizable/collapsible
+  (panel Tags tidak); tanpa impor ZIP (file + folder saja).
 
 ## 14. Kalkulasi mAs Langsung (B-full, divergensi desktop)
 
@@ -321,24 +351,3 @@ disengaja, disetujui pemilik).
 - Status 2026-10-11: lokal termigrasi + terverifikasi (baris lama utuh,
   insert NULL mA/time_s OK); **remote PENDING** (CLI mesin ini tak punya
   akses akun produksi, code 7403).
-
-## 13. Follow-up UI/UX (review `radiology_reader_ui_ux_followup.md`)
-
-- **Tags dua lapis** (Option A+B): ringkasan sidebar (8 baris pertama, tanpa
-  cari/paginasi, + Total + tombol duplex `Open/Tutup full inspector`) dan
-  inspector full-width (kolom Tag ID | Nama | VR | Nilai, lebar kolom tetap,
-  nilai ellipsis + tooltip `title`, paginasi satu baris + pilihan 15/25/50/100
-  per halaman, header sticky, cari tetap di atas).
-- **Nama jujur**: kamus bila dikenal; `Unknown tag` (grup genap) /
-  `Private tag` (grup ganjil) bila tidak — tidak mengarang label.
-- **Kebijakan zoom**: refit otomatis saat layout berubah (buka/tutup panel,
-  resize) kecuali zoom manual/1:1 (`userZoomed`, Reset mengembalikan);
-  label zoom selalu sama dengan status render.
-- **Study info**: nilai penuh via klik-salin (keyboard-accessible) + tooltip;
-  Patient ID mask penuh (nilai asli tetap dipakai dosimetri).
-- **Privasi**: e2e mencegat POST `/api/history` — payload hanya 16 field
-  skalar <4KB (tanpa byte citra).
-- Deviasi dari dokumen review: ringkasan sidebar tanpa kolom cari (satu
-  pencarian di inspector agar tak split-brain); tanpa expand-per-baris
-  (title + DOM penuh untuk AT); tanpa resize-handle panel; tanpa impor ZIP
-  (file + folder saja).
